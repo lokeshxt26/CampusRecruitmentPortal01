@@ -1,0 +1,20 @@
+CampusRecruitmentPortal/
+│
+├── app.py
+├── database.sql
+├── requirements.txt
+│
+├── templates/
+│   ├── index.html
+│   ├── login.html
+│   ├── register.html
+│   ├── dashboard.html
+│   ├── jobs.html
+│   ├── job_details.html
+│   ├── post_job.html
+│   └── applicants.html
+│
+└── static/
+    ├── css/
+    │   └── style.css
+    └── uploads/

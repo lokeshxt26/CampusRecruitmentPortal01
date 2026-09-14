@@ -1,0 +1,29 @@
+﻿# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Environments
+env/
+venv/
+.venv/
+
+# Database
+*.db
+*.sqlite3
+
+# Local binaries & logs
+cloudflared.exe
+cloudflared.log
+*.log
+
+# IDE files
+.vscode/
+.idea/
+
+# Archives & temporary extraction
+extracted/
+*.zip
