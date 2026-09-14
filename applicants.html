@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Applicants for {{ job.title }} | CampusHire{% endblock %}
+
+{% block content %}
+<div class="py-5">
+    <div class="container">
+        
+        <div class="mb-3">
+            <a href="/dashboard" class="text-muted small text-decoration-none">
+                <i class="bi bi-arrow-left me-1"></i> Back to Recruiter Dashboard
+            </a>
+        </div>
+
+        <!-- Drive Header Summary -->
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-4">
+            <div class="p-4 bg-light border-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <div>
+                    <span class="badge bg-primary text-white rounded-pill px-3 py-1 mb-2">Drive Applicant Review</span>
+                    <h3 class="fw-bold mb-1 text-dark">{{ job.title }}</h3>
+                    <p class="text-muted mb-0 small">
+                        <i class="bi bi-geo-alt me-1 text-primary"></i> {{ job.location }} | 
+                        <i class="bi bi-cash me-1 text-success"></i> {{ job.salary }} | 
+                        <i class="bi bi-hourglass me-1 text-danger"></i> Deadline: {{ job.deadline }}
+                    </p>
+                </div>
+                <div class="text-md-end">
+                    <span class="badge bg-info-subtle text-info border border-info-subtle fs-6 rounded-pill px-3 py-2">
+                        {{ applicants|length }} Candidate(s) Applied
+                    </span>
+                </div>
+            </div>
+            
+            <div class="card-body p-0">
+                {% if applicants %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Candidate</th>
+                                <th>Academic Info</th>
+                                <th>CGPA</th>
+                                <th>Resume</th>
+                                <th>Status</th>
+                                <th>Applied Date</th>
+                                <th class="text-end pe-4">Update Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in applicants %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar-container">
+                                            {% if student.profile_pic %}
+                                                <img src="{{ student.profile_pic }}" alt="{{ student.name }}" class="avatar-img-sm" style="width: 44px; height: 44px;">
+                                            {% else %}
+                                                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" alt="Avatar" class="avatar-img-sm" style="width: 44px; height: 44px;">
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <span class="fw-bold text-dark d-block">{{ student.name }}</span>
+                                            <span class="small text-muted">{{ student.email }}</span>
+                                            {% if student.phone %}
+                                                <span class="small text-muted d-block">{{ student.phone }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="fw-semibold text-dark d-block">{{ student.branch or 'N/A' }}</span>
+                                    <span class="small text-muted">Roll: {{ student.roll_no or 'N/A' }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fs-6">
+                                        {{ student.cgpa or '0.0' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if student.resume %}
+                                        <a href="{{ student.resume }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                            <i class="bi bi-file-earmark-pdf me-1"></i> View CV
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted small">Not uploaded</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="status-pill status-{{ student.status }}">
+                                        {{ student.status }}
+                                    </span>
+                                </td>
+                                <td class="text-muted small">
+                                    {{ student.applied_at[:10] if student.applied_at else 'Recent' }}
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group" role="group">
+                                        <a href="/update-status/{{ student.id }}/Shortlisted" class="btn btn-sm btn-outline-warning" title="Shortlist Candidate">
+                                            <i class="bi bi-star me-1"></i> Shortlist
+                                        </a>
+                                        <a href="/update-status/{{ student.id }}/Selected" class="btn btn-sm btn-outline-success" title="Select Candidate">
+                                            <i class="bi bi-check2-circle me-1"></i> Select
+                                        </a>
+                                        <a href="/update-status/{{ student.id }}/Rejected" class="btn btn-sm btn-outline-danger" title="Reject Candidate">
+                                            <i class="bi bi-x-circle me-1"></i> Reject
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-people fs-1 text-muted"></i>
+                    <h5 class="mt-3">No Applicants Yet</h5>
+                    <p class="text-muted small mb-0">No students have applied to this drive yet. Applications will show up here once submitted.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

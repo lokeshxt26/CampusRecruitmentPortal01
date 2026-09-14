@@ -1,0 +1,521 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | CampusHire{% endblock %}
+
+{% block content %}
+<div class="py-5">
+    <div class="container">
+
+        <!-- ==========================================
+             1. ADMIN DASHBOARD
+             ========================================== -->
+        {% if session.get("role") == "admin" %}
+        
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+            <div>
+                <span class="badge bg-danger-subtle text-danger fw-semibold px-3 py-1 rounded-pill mb-2">Control Center</span>
+                <h2 class="fw-bold mb-0">System Administrator Dashboard</h2>
+                <p class="text-muted mb-0">Overview of campus recruitment metrics and user registrations.</p>
+            </div>
+            <div class="mt-3 mt-md-0">
+                <a href="/jobs" class="btn btn-outline-primary rounded-pill px-4">
+                    <i class="bi bi-eye me-1"></i> View All Drives
+                </a>
+            </div>
+        </div>
+
+        <!-- Metric Stat Cards -->
+        <div class="row g-4 mb-5">
+            <div class="col-sm-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-muted small fw-semibold">Total Students</span>
+                            <h2 class="fw-bold mb-0 mt-1">{{ students }}</h2>
+                        </div>
+                        <div class="stat-icon-wrapper stat-icon-primary">
+                            <i class="bi bi-mortarboard-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-muted small fw-semibold">Recruiting Companies</span>
+                            <h2 class="fw-bold mb-0 mt-1">{{ companies }}</h2>
+                        </div>
+                        <div class="stat-icon-wrapper stat-icon-cyan">
+                            <i class="bi bi-buildings-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-muted small fw-semibold">Recruitment Drives</span>
+                            <h2 class="fw-bold mb-0 mt-1">{{ jobs }}</h2>
+                        </div>
+                        <div class="stat-icon-wrapper stat-icon-amber">
+                            <i class="bi bi-briefcase-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-muted small fw-semibold">Applications Filed</span>
+                            <h2 class="fw-bold mb-0 mt-1">{{ applications }}</h2>
+                        </div>
+                        <div class="stat-icon-wrapper stat-icon-emerald">
+                            <i class="bi bi-send-check-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Navigation Tabs & Management Tables -->
+        <ul class="nav nav-pills mb-4 gap-2" id="adminTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active rounded-pill px-4" id="drives-tab" data-bs-toggle="pill" data-bs-target="#adminDrives" type="button" role="tab">
+                    <i class="bi bi-briefcase me-1"></i> All Drives ({{ admin_jobs|length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill px-4" id="students-tab" data-bs-toggle="pill" data-bs-target="#adminStudents" type="button" role="tab">
+                    <i class="bi bi-people me-1"></i> Enrolled Students ({{ admin_students|length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill px-4" id="companies-tab" data-bs-toggle="pill" data-bs-target="#adminCompanies" type="button" role="tab">
+                    <i class="bi bi-buildings me-1"></i> Partner Companies ({{ admin_companies|length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill px-4" id="apps-tab" data-bs-toggle="pill" data-bs-target="#adminApps" type="button" role="tab">
+                    <i class="bi bi-send-check me-1"></i> Recent Applications ({{ admin_applications|length }})
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="adminTabsContent">
+            
+            <!-- Tab 1: Drives Management -->
+            <div class="tab-pane fade show active" id="adminDrives" role="tabpanel">
+                <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-5">
+                    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-briefcase-fill text-primary me-2"></i> All Published Campus Recruitment Drives</h5>
+                        <a href="/jobs" class="btn btn-sm btn-outline-primary rounded-pill px-3">Public View</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Drive Title</th>
+                                        <th>Company</th>
+                                        <th>Package (CTC)</th>
+                                        <th>Location</th>
+                                        <th>Deadline</th>
+                                        <th>Applicants</th>
+                                        <th class="text-end pe-4">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for j in admin_jobs %}
+                                    <tr>
+                                        <td class="ps-4 fw-bold text-dark">{{ j.title }}</td>
+                                        <td>
+                                            <span class="badge bg-light text-primary border">{{ j.company_name }}</span>
+                                        </td>
+                                        <td class="text-success fw-semibold">{{ j.salary }}</td>
+                                        <td>{{ j.location }}</td>
+                                        <td class="small text-danger">{{ j.deadline }}</td>
+                                        <td>
+                                            <span class="badge bg-primary rounded-pill px-3 py-1">{{ j.applicant_count }} Applied</span>
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <a href="/job/{{ j.id }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">View</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Enrolled Students -->
+            <div class="tab-pane fade" id="adminStudents" role="tabpanel">
+                <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-5">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-mortarboard-fill text-primary me-2"></i> Registered Student Candidates</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Candidate</th>
+                                        <th>Branch & Department</th>
+                                        <th>Roll No</th>
+                                        <th>CGPA</th>
+                                        <th>Contact Phone</th>
+                                        <th>Applications</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for s in admin_students %}
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <img src="{{ s.profile_pic or 'https://api.dicebear.com/7.x/initials/svg?seed=' + s.name }}" alt="" class="avatar-img-sm" style="width: 36px; height: 36px;">
+                                                <div>
+                                                    <span class="fw-bold text-dark d-block">{{ s.name }}</span>
+                                                    <span class="small text-muted">{{ s.email }}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ s.branch or 'N/A' }}</td>
+                                        <td><code>{{ s.roll_no or 'N/A' }}</code></td>
+                                        <td>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                                {{ s.cgpa or '0.0' }}
+                                            </span>
+                                        </td>
+                                        <td class="small">{{ s.phone or 'N/A' }}</td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border">{{ s.apps_count }} filed</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Partner Companies -->
+            <div class="tab-pane fade" id="adminCompanies" role="tabpanel">
+                <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-5">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-buildings-fill text-primary me-2"></i> Registered Corporate Employers</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Company Name</th>
+                                        <th>Headquarters</th>
+                                        <th>Recruiter Email</th>
+                                        <th>Website</th>
+                                        <th class="text-end pe-4">Open Drives</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for c in admin_companies %}
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="company-badge" style="width: 34px; height: 34px; font-size: 0.85rem;">
+                                                    {{ c.company_name[:2].upper() }}
+                                                </div>
+                                                <span class="fw-bold text-dark">{{ c.company_name }}</span>
+                                            </div>
+                                        </td>
+                                        <td>{{ c.location or 'India' }}</td>
+                                        <td class="small text-muted">{{ c.email }}</td>
+                                        <td>
+                                            {% if c.website %}
+                                                <a href="{{ c.website }}" target="_blank" class="small text-primary text-decoration-none">
+                                                    Visit <i class="bi bi-box-arrow-up-right"></i>
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted small">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <span class="badge bg-info text-dark rounded-pill px-3 py-1">{{ c.drives_count }} Drives</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4: All Applications -->
+            <div class="tab-pane fade" id="adminApps" role="tabpanel">
+                <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-5">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-send-check-fill text-primary me-2"></i> Recent Student Applications</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Student Candidate</th>
+                                        <th>Target Company</th>
+                                        <th>Drive Role</th>
+                                        <th>Status</th>
+                                        <th>Applied On</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for a in admin_applications %}
+                                    <tr>
+                                        <td class="ps-4">
+                                            <span class="fw-bold text-dark d-block">{{ a.student_name }}</span>
+                                            <span class="small text-muted">{{ a.branch }} (CGPA: {{ a.cgpa }})</span>
+                                        </td>
+                                        <td>
+                                            <span class="fw-semibold text-primary">{{ a.company_name }}</span>
+                                        </td>
+                                        <td class="fw-semibold">{{ a.job_title }}</td>
+                                        <td>
+                                            <span class="status-pill status-{{ a.status }}">{{ a.status }}</span>
+                                        </td>
+                                        <td class="small text-muted">{{ a.applied_at[:10] if a.applied_at else 'Recent' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- ==========================================
+             2. STUDENT DASHBOARD
+             ========================================== -->
+        {% elif session.get("role") == "student" %}
+
+        <!-- Student Profile Banner -->
+        <div class="glass-card p-4 mb-4" style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(6, 182, 212, 0.08) 100%);">
+            <div class="d-flex flex-column flex-md-row align-items-center gap-4">
+                <div class="avatar-container">
+                    {% if student and student.profile_pic %}
+                        <img src="{{ student.profile_pic }}" alt="Profile" class="avatar-img-lg">
+                    {% else %}
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" alt="Default Avatar" class="avatar-img-lg">
+                    {% endif %}
+                </div>
+                <div class="flex-grow-1 text-center text-md-start">
+                    <span class="badge bg-primary text-white rounded-pill px-3 py-1 mb-1">Student Candidate</span>
+                    <h2 class="fw-bold mb-1 text-dark">{{ session.get("name") }}</h2>
+                    <p class="text-muted mb-2">
+                        <i class="bi bi-envelope me-1"></i> {{ session.get("email") }} 
+                        {% if student and student.phone %}| <i class="bi bi-telephone me-1"></i> {{ student.phone }}{% endif %}
+                    </p>
+                    <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                        {% if student and student.roll_no %}
+                            <span class="badge bg-light text-dark border"><i class="bi bi-card-heading me-1"></i> {{ student.roll_no }}</span>
+                        {% endif %}
+                        {% if student and student.branch %}
+                            <span class="badge bg-light text-dark border"><i class="bi bi-book me-1"></i> {{ student.branch }}</span>
+                        {% endif %}
+                        {% if student and student.cgpa %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-trophy me-1"></i> CGPA: {{ student.cgpa }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="mt-3 mt-md-0">
+                    <a href="/profile" class="btn btn-outline-primary rounded-pill px-4">
+                        <i class="bi bi-pencil-square me-1"></i> Edit Profile & Resume
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Applications Section -->
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-send-check text-primary me-2"></i> My Applications ({{ applications|length }})</h5>
+                <a href="/jobs" class="btn btn-sm btn-gradient-primary rounded-pill px-3">
+                    <i class="bi bi-search me-1"></i> Find More Drives
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if applications %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Company</th>
+                                <th>Role / Position</th>
+                                <th>Offered CTC</th>
+                                <th>Status</th>
+                                <th>Applied On</th>
+                                <th class="text-end pe-4">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in applications %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="company-badge" style="width:36px;height:36px;font-size:0.9rem;">
+                                            {{ app.company_name[:2].upper() }}
+                                        </div>
+                                        <span class="fw-semibold text-dark">{{ app.company_name }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-dark">{{ app.title }}</span>
+                                </td>
+                                <td>
+                                    <span class="text-success fw-semibold">{{ app.salary or 'Competitive' }}</span>
+                                </td>
+                                <td>
+                                    <span class="status-pill status-{{ app.status }}">
+                                        {% if app.status == 'Shortlisted' %}
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                        {% elif app.status == 'Selected' %}
+                                            <i class="bi bi-trophy-fill text-success"></i>
+                                        {% elif app.status == 'Rejected' %}
+                                            <i class="bi bi-x-circle-fill text-danger"></i>
+                                        {% else %}
+                                            <i class="bi bi-clock-history text-primary"></i>
+                                        {% endif %}
+                                        {{ app.status }}
+                                    </span>
+                                </td>
+                                <td class="text-muted small">
+                                    {{ app.applied_at[:10] if app.applied_at else 'Recent' }}
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a href="/job/{{ app.job_id }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                        View Drive
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="stat-icon-wrapper stat-icon-primary mx-auto mb-3">
+                        <i class="bi bi-journal-x"></i>
+                    </div>
+                    <h5>No Applications Submitted Yet</h5>
+                    <p class="text-muted small mb-3">Browse available recruitment drives and apply to your target companies.</p>
+                    <a href="/jobs" class="btn btn-gradient-primary rounded-pill px-4">
+                        Explore Open Recruitment Drives
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+
+        <!-- ==========================================
+             3. COMPANY / RECRUITER DASHBOARD
+             ========================================== -->
+        {% else %}
+
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+            <div>
+                <span class="badge bg-info-subtle text-info fw-semibold px-3 py-1 rounded-pill mb-2">Recruiter Portal</span>
+                <h2 class="fw-bold mb-0">Company Recruitment Dashboard</h2>
+                <p class="text-muted mb-0">Manage your active recruitment drives and review student candidate applications.</p>
+            </div>
+            <div class="mt-3 mt-md-0">
+                <a href="/post-job" class="btn btn-gradient-primary rounded-pill px-4 py-2">
+                    <i class="bi bi-plus-lg me-1"></i> Post New Recruitment Drive
+                </a>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-4">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-briefcase text-primary me-2"></i> Your Published Drives ({{ jobs|length }})</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if jobs %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Drive Title</th>
+                                <th>Location</th>
+                                <th>Package (CTC)</th>
+                                <th>Application Deadline</th>
+                                <th>Candidates</th>
+                                <th class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in jobs %}
+                            <tr>
+                                <td class="ps-4">
+                                    <span class="fw-bold text-dark d-block">{{ job.title }}</span>
+                                    <span class="small text-muted">{{ job.job_type or 'Full Time' }}</span>
+                                </td>
+                                <td>
+                                    <i class="bi bi-geo-alt text-primary me-1"></i> {{ job.location }}
+                                </td>
+                                <td>
+                                    <span class="fw-semibold text-success">{{ job.salary }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">
+                                        {{ job.deadline }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary rounded-pill px-3 py-1">
+                                        {{ job.applicant_count or 0 }} Applied
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a href="/applicants/{{ job.id }}" class="btn btn-sm btn-gradient-accent rounded-pill px-3 me-2">
+                                        <i class="bi bi-people-fill me-1"></i> Review Applicants
+                                    </a>
+                                    <a href="/job/{{ job.id }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="stat-icon-wrapper stat-icon-cyan mx-auto mb-3">
+                        <i class="bi bi-briefcase"></i>
+                    </div>
+                    <h5>No Recruitment Drives Published</h5>
+                    <p class="text-muted small mb-3">Publish your first drive to start receiving candidate applications.</p>
+                    <a href="/post-job" class="btn btn-gradient-primary rounded-pill px-4">
+                        Post Your First Drive
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

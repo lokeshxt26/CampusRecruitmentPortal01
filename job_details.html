@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}{{ job.title }} | CampusHire{% endblock %}
+
+{% block content %}
+<div class="py-5">
+    <div class="container">
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                
+                <!-- Back Link -->
+                <div class="mb-3">
+                    <a href="/jobs" class="text-decoration-none text-muted small">
+                        <i class="bi bi-arrow-left me-1"></i> Back to all recruitment drives
+                    </a>
+                </div>
+
+                <!-- Main Job Card -->
+                <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4 bg-white">
+                    
+                    <!-- Header Banner -->
+                    <div class="p-4 p-md-5" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%); color: white;">
+                        <div class="d-flex flex-column flex-md-row align-items-md-center gap-4">
+                            <div class="company-badge" style="width: 72px; height: 72px; font-size: 1.75rem; border-radius: 16px;">
+                                {% if job.logo %}
+                                    <img src="{{ job.logo }}" alt="{{ job.company_name }}">
+                                {% else %}
+                                    <span>{{ job.company_name[:2].upper() }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <span class="badge bg-info text-dark rounded-pill px-3 py-1 mb-2">{{ job.job_type or 'Full Time' }}</span>
+                                <h2 class="fw-bold mb-1 text-white">{{ job.title }}</h2>
+                                <h5 class="opacity-90 fw-normal text-light mb-0">
+                                    {{ job.company_name }}
+                                    {% if job.website %}
+                                        <a href="{{ job.website }}" target="_blank" class="text-light ms-2 small text-decoration-none opacity-75" title="Visit Website">
+                                            <i class="bi bi-box-arrow-up-right"></i>
+                                        </a>
+                                    {% endif %}
+                                </h5>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Key Metadata Strip -->
+                    <div class="p-4 bg-light border-bottom">
+                        <div class="row g-3 text-center text-md-start">
+                            <div class="col-6 col-md-3">
+                                <span class="small text-muted d-block"><i class="bi bi-geo-alt text-primary me-1"></i> Location</span>
+                                <span class="fw-bold text-dark">{{ job.location }}</span>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <span class="small text-muted d-block"><i class="bi bi-cash-stack text-success me-1"></i> Offered CTC</span>
+                                <span class="fw-bold text-success">{{ job.salary }}</span>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <span class="small text-muted d-block"><i class="bi bi-hourglass-split text-danger me-1"></i> Application Deadline</span>
+                                <span class="fw-bold text-danger">{{ job.deadline }}</span>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <span class="small text-muted d-block"><i class="bi bi-calendar-check text-info me-1"></i> Drive Posted</span>
+                                <span class="fw-bold text-dark">{{ job.created_at[:10] if job.created_at else 'Recent' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Body Content -->
+                    <div class="p-4 p-md-5">
+                        
+                        <!-- Eligibility Box -->
+                        <div class="p-3 mb-4 rounded-3 border-start border-4 border-warning bg-warning bg-opacity-10">
+                            <h6 class="fw-bold text-dark mb-1"><i class="bi bi-check2-circle text-warning me-1"></i> Eligibility Criteria</h6>
+                            <p class="mb-0 text-secondary">{{ job.eligibility }}</p>
+                        </div>
+
+                        <!-- Skills -->
+                        {% if job.skills %}
+                        <div class="mb-4">
+                            <h5 class="fw-bold text-dark mb-2">Required Skills & Competencies</h5>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for skill in job.skills.split(',') %}
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill fs-6">{{ skill.strip() }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Full Description -->
+                        <div class="mb-5">
+                            <h5 class="fw-bold text-dark mb-3">Job Description & Role Overview</h5>
+                            <div class="text-secondary lh-lg" style="white-space: pre-line;">
+                                {{ job.description }}
+                            </div>
+                        </div>
+
+                        <!-- About Company -->
+                        {% if job.company_description %}
+                        <div class="p-4 rounded-4 bg-light border mb-5">
+                            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-building me-1 text-primary"></i> About {{ job.company_name }}</h6>
+                            <p class="small text-muted mb-0">{{ job.company_description }}</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Action Controls -->
+                        <div class="p-4 rounded-4 bg-light border text-center text-md-start d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
+                            <div>
+                                <h6 class="fw-bold mb-1">Interested in this opportunity?</h6>
+                                <p class="small text-muted mb-0">Ensure your student profile details and resume are updated before submitting.</p>
+                            </div>
+                            
+                            <div>
+                                {% if session.get("role") == "student" %}
+                                    {% if has_applied %}
+                                        <button class="btn btn-success btn-lg rounded-pill px-5" disabled>
+                                            <i class="bi bi-check2-all me-1"></i> Already Applied
+                                        </button>
+                                    {% else %}
+                                        <a href="/apply/{{ job.id }}" class="btn btn-gradient-primary btn-lg rounded-pill px-5">
+                                            <i class="bi bi-send-fill me-1"></i> Apply for this Drive
+                                        </a>
+                                    {% endif %}
+                                {% elif not session.get("user_id") %}
+                                    <a href="/login" class="btn btn-gradient-primary btn-lg rounded-pill px-5">
+                                        <i class="bi bi-box-arrow-in-right me-1"></i> Login to Apply
+                                    </a>
+                                {% else %}
+                                    <span class="badge bg-secondary p-3 fs-6 rounded-pill">
+                                        <i class="bi bi-info-circle me-1"></i> Only student accounts can apply
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile | CampusHire{% endblock %}
+
+{% block content %}
+<div class="py-5">
+    <div class="container">
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                
+                <div class="mb-3">
+                    <a href="/dashboard" class="text-muted small text-decoration-none">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+                    </a>
+                </div>
+
+                <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white">
+                    
+                    <div class="p-4 p-md-5 border-bottom" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: white;">
+                        <span class="badge bg-info text-dark rounded-pill px-3 py-1 mb-2">Account Settings</span>
+                        <h2 class="fw-bold mb-1 text-white">Manage Profile & Credentials</h2>
+                        <p class="text-light opacity-75 small mb-0">Update your profile picture, academic credentials, and contact information.</p>
+                    </div>
+
+                    <div class="p-4 p-md-5">
+                        
+                        <form method="POST" action="/profile" enctype="multipart/form-data">
+                            
+                            <!-- Profile Picture Section -->
+                            <div class="text-center mb-5 pb-4 border-bottom">
+                                <div class="avatar-container mb-3 position-relative d-inline-block" title="Click camera icon to change profile picture">
+                                    <img id="avatarPreviewImg" 
+                                         src="{{ user.profile_pic or 'https://api.dicebear.com/7.x/bottts/svg?seed=user' }}" 
+                                         alt="Profile Picture" 
+                                         class="avatar-img-lg">
+                                    <label for="avatarFileInput" class="avatar-badge" title="Upload New Profile Picture" style="width: 36px; height: 36px; font-size: 1rem; bottom: 5px; right: 5px;">
+                                        <i class="bi bi-camera-fill"></i>
+                                    </label>
+                                </div>
+                                <h5 class="fw-bold mb-1 text-dark">{{ user.name }}</h5>
+                                <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1 text-capitalize">{{ user.role }}</span>
+                                
+                                <input type="file" id="avatarFileInput" name="profile_picture" accept="image/*" style="display:none;">
+                                <input type="hidden" id="profilePicInput" name="preset_avatar" value="">
+
+                                <div class="mt-3">
+                                    <span class="small text-muted d-block mb-2">Or choose a preset avatar:</span>
+                                    <div class="d-flex justify-content-center gap-2 mb-2">
+                                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" class="preset-avatar-option" data-avatar-url="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80">
+                                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80" class="preset-avatar-option" data-avatar-url="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80">
+                                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" class="preset-avatar-option" data-avatar-url="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80">
+                                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=admin" class="preset-avatar-option" data-avatar-url="https://api.dicebear.com/7.x/bottts/svg?seed=admin">
+                                    </div>
+                                    <label for="avatarFileInput" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                        <i class="bi bi-upload me-1"></i> Upload Photo From Computer
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Basic Information -->
+                            <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-person-lines-fill text-primary me-2"></i> Account Details</h5>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-secondary">Full Name</label>
+                                    <input type="text" name="name" class="form-control form-control-custom" value="{{ user.name }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-secondary">Email Address</label>
+                                    <input type="email" name="email" class="form-control form-control-custom" value="{{ user.email }}" required readonly style="background-color: #f1f5f9;">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-secondary">Change Password (leave blank to keep current)</label>
+                                    <input type="password" name="new_password" class="form-control form-control-custom" placeholder="New Password">
+                                </div>
+                            </div>
+
+                            <!-- STUDENT SPECIFIC PROFILE FIELDS -->
+                            {% if user.role == 'student' %}
+                            <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-mortarboard text-primary me-2"></i> Academic Profile</h5>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-secondary">Roll Number</label>
+                                    <input type="text" name="roll_no" class="form-control form-control-custom" value="{{ student.roll_no or '' }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-secondary">Branch / Department</label>
+                                    <input type="text" name="branch" class="form-control form-control-custom" value="{{ student.branch or '' }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold text-secondary">Graduation Year</label>
+                                    <input type="text" name="year" class="form-control form-control-custom" value="{{ student.year or '' }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold text-secondary">Current CGPA</label>
+                                    <input type="number" step="0.01" min="0" max="10" name="cgpa" class="form-control form-control-custom" value="{{ student.cgpa or 0 }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold text-secondary">Phone Number</label>
+                                    <input type="tel" name="phone" class="form-control form-control-custom" value="{{ student.phone or '' }}">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-secondary">Skills & Competencies</label>
+                                    <input type="text" name="skills" class="form-control form-control-custom" value="{{ student.skills or '' }}" placeholder="Python, React, SQL...">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-secondary">Bio / Summary</label>
+                                    <textarea name="bio" rows="3" class="form-control form-control-custom">{{ student.bio or '' }}</textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-secondary"><i class="bi bi-file-earmark-pdf me-1"></i> Update Resume (PDF / DOC)</label>
+                                    <input type="file" name="resume_file" accept=".pdf,.doc,.docx" class="form-control form-control-custom">
+                                    {% if student and student.resume %}
+                                        <div class="mt-2">
+                                            <a href="{{ student.resume }}" target="_blank" class="small text-primary text-decoration-none">
+                                                <i class="bi bi-paperclip me-1"></i> View Currently Uploaded Resume
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- COMPANY SPECIFIC PROFILE FIELDS -->
+                            {% if user.role == 'company' %}
+                            <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-building text-primary me-2"></i> Company Information</h5>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-secondary">Company Name</label>
+                                    <input type="text" name="company_name" class="form-control form-control-custom" value="{{ company.company_name or '' }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-secondary">Official Website</label>
+                                    <input type="url" name="website" class="form-control form-control-custom" value="{{ company.website or '' }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-secondary">Location</label>
+                                    <input type="text" name="location" class="form-control form-control-custom" value="{{ company.location or '' }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-secondary">Company Logo URL</label>
+                                    <input type="text" name="logo" class="form-control form-control-custom" value="{{ company.logo or '' }}">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-secondary">Company Overview</label>
+                                    <textarea name="description" rows="3" class="form-control form-control-custom">{{ company.description or '' }}</textarea>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                                <a href="/dashboard" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+                                <button type="submit" class="btn btn-gradient-primary rounded-pill px-5">
+                                    <i class="bi bi-save me-1"></i> Save Changes
+                                </button>
+                            </div>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Post Recruitment Drive | CampusHire{% endblock %}
+
+{% block content %}
+<div class="py-5">
+    <div class="container">
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                
+                <div class="mb-3">
+                    <a href="/dashboard" class="text-muted small text-decoration-none">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Recruiter Dashboard
+                    </a>
+                </div>
+
+                <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white">
+                    
+                    <div class="p-4 p-md-5 border-bottom" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: white;">
+                        <span class="badge bg-info text-dark rounded-pill px-3 py-1 mb-2">Drive Creation</span>
+                        <h2 class="fw-bold mb-1 text-white">Post Campus Recruitment Drive</h2>
+                        <p class="text-light opacity-75 small mb-0">Publish job opening details, eligibility criteria, and CTC package for graduating students.</p>
+                    </div>
+
+                    <div class="p-4 p-md-5">
+                        
+                        <form method="POST" action="/post-job">
+                            
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-secondary">Job Title / Designation *</label>
+                                <input type="text" name="title" class="form-control form-control-custom" placeholder="e.g. Software Engineer - Full Stack" required>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-secondary">Job Type</label>
+                                    <select name="job_type" class="form-select form-control-custom">
+                                        <option value="Full Time" selected>Full Time (Permanent)</option>
+                                        <option value="Internship">Internship + PPO</option>
+                                        <option value="Contract">Contract / Specialist</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-secondary">Salary / Package (CTC) *</label>
+                                    <input type="text" name="salary" class="form-control form-control-custom" placeholder="e.g. ₹18 - 24 LPA" required>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-secondary">Work Location *</label>
+                                    <input type="text" name="location" class="form-control form-control-custom" placeholder="e.g. Bangalore / Hyderabad / Hybrid" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-secondary">Application Deadline *</label>
+                                    <input type="date" name="deadline" class="form-control form-control-custom" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-secondary">Eligibility Criteria *</label>
+                                <input type="text" name="eligibility" class="form-control form-control-custom" placeholder="e.g. B.Tech in CSE / IT / ECE, Minimum 7.5 CGPA, No active backlogs" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-secondary">Key Skills Required (comma separated)</label>
+                                <input type="text" name="skills" class="form-control form-control-custom" placeholder="e.g. Python, React, SQL, Cloud Architecture, Git">
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-secondary">Detailed Job Description & Responsibilities *</label>
+                                <textarea name="description" rows="6" class="form-control form-control-custom" placeholder="Describe the team, core responsibilities, interview process, and expectations..." required></textarea>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                                <a href="/dashboard" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+                                <button type="submit" class="btn btn-gradient-primary rounded-pill px-5">
+                                    <i class="bi bi-send-fill me-1"></i> Publish Recruitment Drive
+                                </button>
+                            </div>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
