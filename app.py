@@ -1,13 +1,27 @@
 import os
 import uuid
+import random
+import secrets
+import urllib.parse
+import requests
+from dotenv import load_dotenv
+
+# Load environment variables from .env
+load_dotenv()
+
 from flask import (
     Flask, render_template, request, redirect, session, flash, jsonify, url_for
 )
 from werkzeug.utils import secure_filename
+from werkzeug.middleware.proxy_fix import ProxyFix
 from db import get_db, init_db
+import sms_service
 
 app = Flask(__name__)
-app.secret_key = "campus_recruitment_portal_super_secret_key_2026"
+app.secret_key = os.getenv("SECRET_KEY", "campus_recruitment_portal_super_secret_key_2026")
+
+# Apply ProxyFix middleware so redirect_uri uses https on Render / reverse proxies
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 # Configure Upload Folders
 UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads")
@@ -269,11 +283,13 @@ def register():
                 db.close()
                 return redirect("/login")
 
+            phone = request.form.get("phone", "").strip()
+
             # Insert user
             cursor.execute("""
-                INSERT INTO users (name, email, password, role, profile_pic)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (name, email, password, role, profile_pic))
+                INSERT INTO users (name, email, password, role, profile_pic, phone)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (name, email, password, role, profile_pic, phone))
             user_id = cursor.lastrowid
 
             if role == "student":
@@ -333,16 +349,23 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form.get("email", "").strip().lower()
+        identifier = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "").strip()
+        login_role = request.form.get("login_role", "").strip().lower()
 
         db = get_db()
         cursor = db.cursor(dictionary=True)
 
-        cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
+        cursor.execute("SELECT * FROM users WHERE LOWER(email) = %s OR phone = %s", (identifier, identifier))
         user = cursor.fetchone()
 
         if user and user["password"] == password:
+            if login_role == "admin" and user["role"] != "admin":
+                cursor.close()
+                db.close()
+                flash("Access denied. This account does not have Administrator privileges.", "danger")
+                return redirect("/login")
+
             # Check if user opted to add/update profile picture right on the login page!
             new_avatar = None
             if "profile_picture" in request.files:
@@ -373,39 +396,297 @@ def login():
 
         cursor.close()
         db.close()
-        flash("Invalid email or password. Please try again.", "danger")
+        flash("Invalid credentials. Please enter the correct email/phone and password.", "danger")
 
     return render_template("login.html")
 
 
 @app.route("/login/demo/<role>")
 def login_demo(role):
-    """Direct 1-click instant login for testing any role."""
-    role = role.lower()
-    email = "student@campus.com"
-    if role in ["company", "recruiter"]:
-        email = "google@campus.com"
-    elif role == "admin":
-        email = "admin@campus.com"
+    """Direct 1-click instant login has been disabled for security."""
+    flash("Direct 1-click login has been disabled for security. Please enter your credentials to log in.", "info")
+    return redirect("/login")
 
+
+@app.route("/api/auth/send-otp", methods=["POST"])
+def api_send_otp():
+    """Validates Indian mobile number and sends a secure 6-digit OTP via SMS service."""
+    data = request.get_json(silent=True) or request.form
+    phone = data.get("phone", "").strip()
+    
+    success, message = sms_service.request_otp(phone)
+    if not success:
+        return jsonify({"success": False, "message": message}), 400
+
+    # For security, the OTP is strictly NEVER sent back in the response
+    return jsonify({
+        "success": True,
+        "message": message
+    })
+
+
+@app.route("/api/auth/verify-otp", methods=["POST"])
+def api_verify_otp():
+    """Verifies entered OTP against hashed storage and signs in or creates user."""
+    data = request.get_json(silent=True) or request.form
+    phone = data.get("phone", "").strip()
+    otp = data.get("otp", "").strip()
+    name = data.get("name", "").strip()
+
+    success, message, clean_phone = sms_service.verify_otp_submission(phone, otp)
+    if not success:
+        return jsonify({"success": False, "message": message}), 400
+
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM users WHERE phone LIKE %s", (f"%{clean_phone[-10:]}",))
+    user = cursor.fetchone()
+
+    if not user:
+        # Create a new user account if mobile number does not exist
+        user_name = name if name else f"Student {clean_phone[-4:]}"
+        user_email = f"{clean_phone[-10:]}@campus.com"
+        
+        cursor.execute("SELECT * FROM users WHERE email = %s", (user_email,))
+        existing = cursor.fetchone()
+        if existing:
+            user = existing
+        else:
+            default_avatar = f"https://api.dicebear.com/7.x/initials/svg?seed={user_name}"
+            cursor.execute("""
+                INSERT INTO users (name, email, password, role, profile_pic, phone)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (user_name, user_email, "otp_authenticated_user", "student", default_avatar, clean_phone[-10:]))
+            db.commit()
+            user_id = cursor.lastrowid
+            cursor.execute("INSERT INTO students (user_id, phone, skills) VALUES (%s, %s, %s)",
+                           (user_id, clean_phone[-10:], "Campus Candidate"))
+            db.commit()
+            cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+            user = cursor.fetchone()
+
+    # Populate authenticated session
+    session["user_id"] = user["id"]
+    session["name"] = user["name"]
+    session["email"] = user["email"]
+    session["role"] = user["role"]
+    session["profile_pic"] = user["profile_pic"] or f"https://api.dicebear.com/7.x/initials/svg?seed={user['name']}"
+
+    cursor.close()
+    db.close()
+    return jsonify({
+        "success": True,
+        "message": f"Welcome back, {user['name']}!",
+        "redirect": "/dashboard"
+    })
+
+
+# -------------------------------------------------------------
+# OFFICIAL GOOGLE OAUTH 2.0 / OPENID CONNECT (CONTINUE WITH GOOGLE)
+# -------------------------------------------------------------
+
+@app.route("/auth/google/login")
+def google_login():
+    """Initiates official Google OAuth 2.0 OpenID Connect authentication flow."""
+    client_id = os.getenv("GOOGLE_CLIENT_ID")
+    if not client_id or client_id.startswith("your_"):
+        flash("Google OAuth credentials are not configured. Please set GOOGLE_CLIENT_ID in your .env file.", "warning")
+        return redirect("/login")
+
+    # Generate secure random state token for CSRF protection
+    state = secrets.token_urlsafe(32)
+    session["google_oauth_state"] = state
+
+    # Determine redirect URI (Render / reverse proxy compatible)
+    redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")
+    if not redirect_uri:
+        redirect_uri = url_for("google_callback", _external=True)
+        if request.headers.get("X-Forwarded-Proto") == "https":
+            redirect_uri = redirect_uri.replace("http://", "https://")
+
+    session["google_redirect_uri"] = redirect_uri
+
+    # Official Google OAuth 2.0 authorization URL
+    params = {
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "prompt": "select_account",  # Displays Google account chooser / detects signed-in accounts
+        "state": state
+    }
+    google_auth_url = f"https://accounts.google.com/o/oauth2/v2/auth?{urllib.parse.urlencode(params)}"
+    return redirect(google_auth_url)
+
+
+@app.route("/auth/google/callback")
+def google_callback():
+    """Handles callback from Google OAuth server after user selects account."""
+    # 1. Validate state parameter to prevent CSRF attacks
+    state = request.args.get("state")
+    saved_state = session.pop("google_oauth_state", None)
+    if not state or state != saved_state:
+        flash("Google authentication error: session state mismatch or expired. Please try again.", "danger")
+        return redirect("/login")
+
+    # 2. Check for Google error response (e.g. user canceled consent)
+    error = request.args.get("error")
+    if error:
+        flash(f"Google sign-in was canceled or encountered an error: {error}", "warning")
+        return redirect("/login")
+
+    # 3. Retrieve authorization code
+    code = request.args.get("code")
+    if not code:
+        flash("Google authentication failed: no authorization code returned.", "danger")
+        return redirect("/login")
+
+    client_id = os.getenv("GOOGLE_CLIENT_ID")
+    client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
+    redirect_uri = session.pop("google_redirect_uri", None) or url_for("google_callback", _external=True)
+
+    # 4. Exchange authorization code for tokens securely on server
+    token_url = "https://oauth2.googleapis.com/token"
+    token_payload = {
+        "code": code,
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "redirect_uri": redirect_uri,
+        "grant_type": "authorization_code"
+    }
+
+    try:
+        token_resp = requests.post(token_url, data=token_payload, timeout=10)
+        token_data = token_resp.json()
+    except Exception as e:
+        flash(f"Failed to connect to Google OAuth server: {str(e)}", "danger")
+        return redirect("/login")
+
+    access_token = token_data.get("access_token")
+    if not access_token:
+        err_msg = token_data.get("error_description", token_data.get("error", "Unable to retrieve Google access token."))
+        flash(f"Google login failed: {err_msg}", "danger")
+        return redirect("/login")
+
+    # 5. Fetch verified user profile from OpenID Connect userinfo endpoint
+    try:
+        userinfo_resp = requests.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {access_token}"},
+            timeout=10
+        )
+        userinfo = userinfo_resp.json()
+    except Exception as e:
+        flash(f"Failed to retrieve user profile from Google: {str(e)}", "danger")
+        return redirect("/login")
+
+    email = userinfo.get("email", "").strip().lower()
+    name = userinfo.get("name", "").strip() or email.split("@")[0].title()
+    picture = userinfo.get("picture", "")
+
+    if not email:
+        flash("Google account did not return a valid email address.", "danger")
+        return redirect("/login")
+
+    # 6. Check if user already exists in database
     db = get_db()
     cursor = db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM users WHERE LOWER(email) = %s", (email,))
     user = cursor.fetchone()
+
+    if not user:
+        # Create new user for this Google account
+        avatar_url = picture if picture else f"https://api.dicebear.com/7.x/initials/svg?seed={name}"
+        cursor.execute("""
+            INSERT INTO users (name, email, password, role, profile_pic)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (name, email, "google_oauth_auth", "student", avatar_url))
+        db.commit()
+        user_id = cursor.lastrowid
+        cursor.execute("INSERT INTO students (user_id, skills) VALUES (%s, %s)", (user_id, "Google Authenticated Student"))
+        db.commit()
+        cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+        user = cursor.fetchone()
+    else:
+        # If user exists and profile picture is empty, update with Google picture
+        if picture and not user.get("profile_pic"):
+            cursor.execute("UPDATE users SET profile_pic = %s WHERE id = %s", (picture, user["id"]))
+            db.commit()
+            user["profile_pic"] = picture
+
+    # 7. Authenticate user session
+    session["user_id"] = user["id"]
+    session["name"] = user["name"]
+    session["email"] = user["email"]
+    session["role"] = user["role"]
+    session["profile_pic"] = user["profile_pic"] or f"https://api.dicebear.com/7.x/initials/svg?seed={user['name']}"
+
     cursor.close()
     db.close()
+    flash(f"Welcome, {user['name']}! Signed in via Google.", "success")
+    return redirect("/dashboard")
 
-    if user:
-        session["user_id"] = user["id"]
-        session["name"] = user["name"]
-        session["email"] = user["email"]
-        session["role"] = user["role"]
-        session["profile_pic"] = user["profile_pic"] or f"https://api.dicebear.com/7.x/initials/svg?seed={user['name']}"
-        flash(f"Signed in successfully as {user['name']} ({user['role'].title()})!", "success")
-        return redirect("/dashboard")
 
-    flash("Demo account not found.", "warning")
-    return redirect("/login")
+@app.route("/api/auth/forgot-password", methods=["POST"])
+def api_forgot_password():
+    """Handles password reset request with OTP verification."""
+    data = request.get_json(silent=True) or request.form
+    step = data.get("step", "request_otp")
+    identifier = data.get("identifier", "").strip().lower()
+    otp = data.get("otp", "").strip()
+    new_password = data.get("new_password", "").strip()
+
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+
+    if step == "request_otp":
+        if not identifier:
+            cursor.close()
+            db.close()
+            return jsonify({"success": False, "message": "Please enter your registered email or phone number."}), 400
+
+        cursor.execute("SELECT * FROM users WHERE LOWER(email) = %s OR phone LIKE %s", (identifier, f"%{identifier[-10:]}"))
+        user = cursor.fetchone()
+        if not user:
+            cursor.close()
+            db.close()
+            return jsonify({"success": False, "message": "No registered account found with that email or phone."}), 404
+
+        gen_otp = str(random.randint(100000, 999999))
+        session["reset_otp"] = gen_otp
+        session["reset_user_id"] = user["id"]
+        cursor.close()
+        db.close()
+        return jsonify({
+            "success": True,
+            "message": f"Reset code sent to {user['email']}!",
+            "otp": gen_otp
+        })
+
+    elif step == "reset":
+        expected_otp = session.get("reset_otp")
+        user_id = session.get("reset_user_id")
+        if not expected_otp or str(otp) != str(expected_otp) or not user_id:
+            cursor.close()
+            db.close()
+            return jsonify({"success": False, "message": "Invalid or expired reset code. Please request a new one."}), 400
+
+        if not new_password or len(new_password) < 4:
+            cursor.close()
+            db.close()
+            return jsonify({"success": False, "message": "Password must be at least 4 characters long."}), 400
+
+        cursor.execute("UPDATE users SET password = %s WHERE id = %s", (new_password, user_id))
+        db.commit()
+        session.pop("reset_otp", None)
+        session.pop("reset_user_id", None)
+        cursor.close()
+        db.close()
+        return jsonify({"success": True, "message": "Password reset successfully! Please sign in with your new password."})
+
+    cursor.close()
+    db.close()
+    return jsonify({"success": False, "message": "Invalid request."}), 400
 
 
 @app.route("/api/user-avatar")

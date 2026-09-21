@@ -1,157 +1,532 @@
 {% extends "base.html" %}
 
-{% block title %}Login | CampusHire Portal{% endblock %}
+{% block title %}Welcome | CampusHire Login{% endblock %}
 
 {% block content %}
-<div class="auth-page-wrapper">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-7 col-lg-5 col-xl-4">
-                
-                <!-- Animated Glassmorphic Login Card -->
-                <div class="glass-card auth-animated-card p-4 p-md-5">
-                    
-                    <!-- Header with Animated Avatar and Option to Add Profile Picture -->
-                    <div class="text-center mb-4 animate-item-1">
-                        
-                        <div class="avatar-container mb-3 position-relative d-inline-block" title="Click camera icon to change/upload profile picture">
-                            <img id="avatarPreviewImg" 
-                                 src="https://api.dicebear.com/7.x/bottts/svg?seed=welcome" 
-                                 alt="Avatar Preview" 
-                                 class="avatar-img avatar-pulse-ring">
-                            
-                            <label for="avatarFileInput" class="avatar-badge shadow" title="Upload/Change Profile Picture" style="cursor: pointer;">
-                                <i class="bi bi-camera-fill"></i>
-                            </label>
-                        </div>
+<div class="neu-auth-body">
+    <div class="container d-flex justify-content-center">
+        <div class="neu-card">
+            
+            <!-- Top Convex Embossed Badge with Golden Lock & Key -->
+            <div class="neu-icon-badge" title="Secure Campus Portal">
+                <span>🔐</span>
+            </div>
 
-                        <h3 class="fw-bold mb-1" style="color: #0f172a; letter-spacing: -0.02em;">Welcome Back</h3>
-                        <p class="text-muted small mb-3">Sign in to your campus recruitment account</p>
+            <!-- Header Titles -->
+            <h2 class="neu-title">Welcome</h2>
+            <p class="neu-subtitle">Login to continue your journey</p>
 
-                        <!-- Instant 1-Click Fast Login Section -->
-                        <div class="p-2 mb-3 rounded-4 bg-light border">
-                            <span class="small fw-bold text-secondary d-block mb-2 text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">⚡ Instant 1-Click Demo Logins</span>
-                            <div class="d-grid gap-1 mb-2">
-                                <a href="/login/demo/student" class="btn btn-sm btn-outline-primary rounded-pill py-1 fw-semibold text-start px-3">
-                                    <i class="bi bi-mortarboard-fill text-primary me-2"></i> Student Account (Rahul Sharma)
-                                </a>
-                                <a href="/login/demo/company" class="btn btn-sm btn-outline-info rounded-pill py-1 fw-semibold text-start px-3 text-dark">
-                                    <i class="bi bi-building-fill text-info me-2"></i> Recruiter Account (Google HR)
-                                </a>
-                                <a href="/login/demo/admin" class="btn btn-sm btn-outline-danger rounded-pill py-1 fw-semibold text-start px-3">
-                                    <i class="bi bi-shield-check text-danger me-2"></i> System Administrator
-                                </a>
-                            </div>
-                            <span class="text-muted" style="font-size: 0.72rem;">Or use custom credentials below:</span>
-                        </div>
+            <!-- Mode Selection Tabs -->
+            <div class="neu-nav-tabs">
+                <button type="button" class="neu-nav-tab active" id="tabEmailBtn" onclick="switchLoginMode('email')">
+                    <i class="bi bi-envelope me-1"></i> Email
+                </button>
+                <button type="button" class="neu-nav-tab" id="tabPhoneBtn" onclick="switchLoginMode('phone')">
+                    <i class="bi bi-phone me-1"></i> Mobile OTP
+                </button>
+                <button type="button" class="neu-nav-tab" id="tabAdminBtn" onclick="switchLoginMode('admin')">
+                    <i class="bi bi-shield-lock me-1"></i> Admin
+                </button>
+            </div>
 
-                        <!-- Option to add profile picture or select preset avatar -->
-                        <div class="accordion accordion-flush mb-3" id="avatarAccordion">
-                            <div class="accordion-item bg-transparent border-0">
-                                <h2 class="accordion-header" id="headingAvatar">
-                                    <button class="accordion-button collapsed py-1 px-2 text-primary small bg-transparent shadow-none justify-content-center" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAvatar">
-                                        <i class="bi bi-image me-1"></i> Choose / Upload Profile Picture
-                                    </button>
-                                </h2>
-                                <div id="collapseAvatar" class="accordion-collapse collapse" data-bs-parent="#avatarAccordion">
-                                    <div class="accordion-body p-2 text-center bg-white rounded-3 mt-2 border shadow-sm">
-                                        <p class="small text-muted mb-2">Pick an avatar or upload your custom photo:</p>
-                                        <div class="d-flex justify-content-center gap-2 mb-2">
-                                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" class="preset-avatar-option" data-avatar-url="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" title="Student 1">
-                                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80" class="preset-avatar-option" data-avatar-url="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80" title="Student 2">
-                                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" class="preset-avatar-option" data-avatar-url="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" title="Student 3">
-                                            <img src="https://api.dicebear.com/7.x/bottts/svg?seed=admin" class="preset-avatar-option" data-avatar-url="https://api.dicebear.com/7.x/bottts/svg?seed=admin" title="Bot Avatar">
-                                        </div>
-                                        <label for="avatarFileInput" class="btn btn-sm btn-outline-primary w-100 rounded-pill" style="cursor: pointer;">
-                                            <i class="bi bi-upload me-1"></i> Upload From Device
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+            <!-- Dynamic Alert Message -->
+            <div id="authAlertBox" class="neu-alert neu-alert-info d-none">
+                <i class="bi bi-info-circle-fill"></i>
+                <span id="authAlertText"></span>
+            </div>
 
-                    </div>
+            <!-- 1. STANDARD EMAIL / ADMIN LOGIN FORM -->
+            <form id="emailLoginForm" method="POST" action="/login">
+                <input type="hidden" name="login_role" id="loginRoleInput" value="user">
 
-                    <!-- Login Form -->
-                    <form method="POST" action="/login" enctype="multipart/form-data">
-                        
-                        <!-- Hidden file input for avatar upload -->
-                        <input type="file" id="avatarFileInput" name="profile_picture" accept="image/*" style="display:none;">
-                        <!-- Hidden field for preset avatar url if selected -->
-                        <input type="hidden" id="profilePicInput" name="preset_avatar" value="">
-
-                        <!-- Email Input -->
-                        <div class="mb-3 animate-item-2">
-                            <label class="form-label small fw-semibold text-secondary">Email Address</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0" style="border-radius: var(--radius-md) 0 0 var(--radius-md);">
-                                    <i class="bi bi-envelope text-muted"></i>
-                                </span>
-                                <input type="email" 
-                                       id="loginEmail" 
-                                       name="email" 
-                                       class="form-control form-control-custom border-start-0" 
-                                       placeholder="name@campus.com" 
-                                       required
-                                       style="border-radius: 0 var(--radius-md) var(--radius-md) 0;">
-                            </div>
-                            <div class="form-text text-muted" style="font-size: 0.72rem;">Your saved profile picture loads dynamically as you enter your email.</div>
-                        </div>
-
-                        <!-- Password Input -->
-                        <div class="mb-3 animate-item-3">
-                            <div class="d-flex justify-content-between">
-                                <label class="form-label small fw-semibold text-secondary">Password</label>
-                            </div>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0" style="border-radius: var(--radius-md) 0 0 var(--radius-md);">
-                                    <i class="bi bi-lock text-muted"></i>
-                                </span>
-                                <input type="password" 
-                                       id="password" 
-                                       name="password" 
-                                       class="form-control form-control-custom border-start-0 border-end-0" 
-                                       placeholder="••••••••" 
-                                       required>
-                                <button class="btn btn-outline-secondary toggle-password-btn bg-white border-start-0" 
-                                        type="button" 
-                                        data-target="password"
-                                        style="border-radius: 0 var(--radius-md) var(--radius-md) 0;">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="d-flex justify-content-between align-items-center mb-4 animate-item-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="rememberMe" name="remember" checked>
-                                <label class="form-check-label small text-muted" for="rememberMe">
-                                    Remember my session
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Submit Button -->
-                        <button type="submit" class="btn btn-gradient-primary w-100 py-2 mb-3 animate-item-4 shadow">
-                            <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to Account
-                        </button>
-
-                    </form>
-
-                    <!-- Footer Link -->
-                    <div class="text-center pt-2 border-top animate-item-4">
-                        <p class="small text-muted mb-0">
-                            Don't have an account? 
-                            <a href="/register" class="text-primary fw-bold text-decoration-none">
-                                Register New Account
-                            </a>
-                        </p>
-                    </div>
-
+                <!-- Email / Identifier Input -->
+                <div class="neu-input-wrapper">
+                    <label class="neu-input-label" id="loginIdentifierLabel">Email Address</label>
+                    <input type="text" 
+                           id="loginIdentifier" 
+                           name="email" 
+                           class="neu-input" 
+                           placeholder="name@campus.com" 
+                           required>
                 </div>
 
+                <!-- Password Input with Eye Toggle -->
+                <div class="neu-input-wrapper">
+                    <label class="neu-input-label">Password</label>
+                    <div class="neu-password-wrap">
+                        <input type="password" 
+                               id="loginPassword" 
+                               name="password" 
+                               class="neu-input" 
+                               placeholder="••••••••" 
+                               required>
+                        <button type="button" class="neu-eye-btn" onclick="togglePasswordVisibility('loginPassword', this)" title="Show/Hide Password">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Remember Me & Forgot Password Row -->
+                <div class="neu-options-row">
+                    <label class="neu-checkbox-label">
+                        <input type="checkbox" name="remember" class="neu-checkbox" checked>
+                        <span>Remember me</span>
+                    </label>
+                    <a href="javascript:void(0)" onclick="openForgotPasswordModal()" class="neu-link-blue">
+                        Forgot Password?
+                    </a>
+                </div>
+
+                <!-- Embossed LOGIN Button -->
+                <button type="submit" class="neu-btn-action" id="loginSubmitBtn">
+                    LOGIN
+                </button>
+            </form>
+
+            <!-- 2. REAL MOBILE SMS OTP LOGIN FORM -->
+            <div id="phoneLoginForm" class="d-none">
+                <!-- Mobile Number Input Group -->
+                <div class="neu-input-wrapper" id="phoneInputGroup">
+                    <label class="neu-input-label">Indian Mobile Number</label>
+                    <div class="d-flex gap-2">
+                        <div class="position-relative flex-grow-1">
+                            <span class="position-absolute start-0 top-50 translate-middle-y ps-3 text-muted fw-bold" style="font-size: 0.88rem;">+91</span>
+                            <input type="tel" 
+                                   id="phoneInput" 
+                                   class="neu-input" 
+                                   style="padding-left: 48px;" 
+                                   placeholder="9876543210" 
+                                   maxlength="10" 
+                                   autocomplete="tel">
+                        </div>
+                        <button type="button" class="neu-btn-action mb-0 text-nowrap px-3" style="width: auto; border-radius: 20px;" id="sendOtpBtn" onclick="requestRealSmsOtp()">
+                            Send OTP
+                        </button>
+                    </div>
+                    <span class="small text-muted ps-2" style="font-size: 0.74rem;">Enter 10-digit Indian mobile number (e.g. 9876543210)</span>
+                </div>
+
+                <!-- 6-Box OTP Input (Revealed after SMS is dispatched) -->
+                <div id="otpInputGroup" class="d-none mt-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1 px-1">
+                        <label class="neu-input-label mb-0">Enter 6-Digit SMS OTP</label>
+                        <span class="small text-danger fw-semibold" id="otpExpiryTimer" title="OTP Validity">Expires: 05:00</span>
+                    </div>
+
+                    <div class="neu-otp-group">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="neu-otp-cell" id="otp1" oninput="handleOtpInput(this, 'otp2')" onkeydown="handleOtpBackspace(event, this, null)">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="neu-otp-cell" id="otp2" oninput="handleOtpInput(this, 'otp3')" onkeydown="handleOtpBackspace(event, this, 'otp1')">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="neu-otp-cell" id="otp3" oninput="handleOtpInput(this, 'otp4')" onkeydown="handleOtpBackspace(event, this, 'otp2')">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="neu-otp-cell" id="otp4" oninput="handleOtpInput(this, 'otp5')" onkeydown="handleOtpBackspace(event, this, 'otp3')">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="neu-otp-cell" id="otp5" oninput="handleOtpInput(this, 'otp6')" onkeydown="handleOtpBackspace(event, this, 'otp4')">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="neu-otp-cell" id="otp6" oninput="handleOtpInput(this, null)" onkeydown="handleOtpBackspace(event, this, 'otp5')">
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3 px-1 small">
+                        <span class="text-muted" id="otpCooldownText">Resend in 60s</span>
+                        <a href="javascript:void(0)" id="resendOtpLink" class="neu-link-blue d-none" onclick="requestRealSmsOtp()">Resend OTP</a>
+                    </div>
+
+                    <button type="button" class="neu-btn-action" id="verifyOtpBtn" onclick="submitRealOtpVerification()">
+                        VERIFY & LOGIN
+                    </button>
+                </div>
+            </div>
+
+            <!-- OFFICIAL "CONTINUE WITH GOOGLE" BUTTON -->
+            <div class="mb-3">
+                <a href="/auth/google/login" class="neu-btn-action text-decoration-none d-flex align-items-center justify-content-center gap-2 mb-2" style="color: var(--neu-text); font-size: 0.88rem; text-transform: none; letter-spacing: normal;">
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z"/>
+                        <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.14 0 9.89 0 12s.45 3.86 1.24 5.42l4.04-3.15z"/>
+                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                    </svg>
+                    <span class="fw-bold">Continue with Google</span>
+                </a>
+            </div>
+
+            <!-- Don't have account? + Navigation -->
+            <div class="neu-switch-row">
+                <span>Don't have an account?</span>
+                <a href="/register" class="neu-circle-btn" title="Create New Account">
+                    <i class="bi bi-plus"></i>
+                </a>
+            </div>
+
+            <!-- Social Buttons (Google Official Link) -->
+            <div class="neu-social-row">
+                <a href="/auth/google/login" class="neu-social-btn text-danger" title="Continue with Google">
+                    <i class="bi bi-google"></i>
+                </a>
+                <button type="button" class="neu-social-btn text-primary" onclick="alert('Please use the official Google or Mobile OTP options.')" title="Sign in with Facebook">
+                    <i class="bi bi-facebook"></i>
+                </button>
+                <button type="button" class="neu-social-btn text-info" onclick="alert('Please use the official Google or Mobile OTP options.')" title="Sign in with LinkedIn">
+                    <i class="bi bi-linkedin"></i>
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: FORGOT PASSWORD RESET FLOW -->
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 32px; background: #ebf0f7;">
+            <div class="modal-body p-4 text-center">
+                <div class="neu-icon-badge mb-3" style="width:64px;height:64px;font-size:1.6rem;">
+                    <span>🔑</span>
+                </div>
+                <h4 class="fw-bold text-dark mb-1">Reset Password</h4>
+                <p class="small text-muted mb-3">Enter your registered email or phone number</p>
+
+                <div id="forgotAlert" class="neu-alert neu-alert-info d-none text-start">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <span id="forgotAlertText"></span>
+                </div>
+
+                <div id="forgotStep1">
+                    <div class="neu-input-wrapper text-start">
+                        <label class="neu-input-label">Email or Mobile Number</label>
+                        <input type="text" id="forgotIdentifier" class="neu-input" placeholder="e.g. name@campus.com or 9876543210">
+                    </div>
+                    <button type="button" class="neu-btn-action mb-2" onclick="requestResetCode()">
+                        SEND RESET CODE
+                    </button>
+                </div>
+
+                <div id="forgotStep2" class="d-none text-start">
+                    <div class="neu-input-wrapper">
+                        <label class="neu-input-label">6-Digit Reset Code</label>
+                        <input type="text" id="forgotOtp" class="neu-input text-center fw-bold fs-5" maxlength="6" placeholder="123456">
+                    </div>
+                    <div class="neu-input-wrapper">
+                        <label class="neu-input-label">New Password</label>
+                        <input type="password" id="forgotNewPassword" class="neu-input" placeholder="Enter new password (min 4 chars)">
+                    </div>
+                    <button type="button" class="neu-btn-action mb-2" onclick="submitPasswordReset()">
+                        UPDATE PASSWORD
+                    </button>
+                </div>
+
+                <div class="text-center pt-2">
+                    <button type="button" class="btn btn-sm btn-link text-muted text-decoration-none" data-bs-dismiss="modal">
+                        Cancel and return to Login
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let resendCooldownInterval = null;
+let otpExpiryInterval = null;
+
+function switchLoginMode(mode) {
+    const emailForm = document.getElementById('emailLoginForm');
+    const phoneForm = document.getElementById('phoneLoginForm');
+    const tabEmail = document.getElementById('tabEmailBtn');
+    const tabPhone = document.getElementById('tabPhoneBtn');
+    const tabAdmin = document.getElementById('tabAdminBtn');
+    const roleInput = document.getElementById('loginRoleInput');
+    const idLabel = document.getElementById('loginIdentifierLabel');
+    const idInput = document.getElementById('loginIdentifier');
+    const alertBox = document.getElementById('authAlertBox');
+    const alertText = document.getElementById('authAlertText');
+
+    [tabEmail, tabPhone, tabAdmin].forEach(t => t.classList.remove('active'));
+    alertBox.classList.add('d-none');
+
+    if (mode === 'email') {
+        tabEmail.classList.add('active');
+        emailForm.classList.remove('d-none');
+        phoneForm.classList.add('d-none');
+        roleInput.value = 'user';
+        idLabel.innerText = 'Email Address';
+        idInput.placeholder = 'name@campus.com';
+    } else if (mode === 'phone') {
+        tabPhone.classList.add('active');
+        emailForm.classList.add('d-none');
+        phoneForm.classList.remove('d-none');
+    } else if (mode === 'admin') {
+        tabAdmin.classList.add('active');
+        emailForm.classList.remove('d-none');
+        phoneForm.classList.add('d-none');
+        roleInput.value = 'admin';
+        idLabel.innerText = 'Administrator Email';
+        idInput.placeholder = 'admin@campus.com';
+        
+        alertBox.classList.remove('d-none');
+        alertBox.className = 'neu-alert neu-alert-info';
+        alertText.innerHTML = '<strong>Admin Portal:</strong> Please enter your administrator credentials.';
+    }
+}
+
+function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'bi bi-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'bi bi-eye';
+    }
+}
+
+// Request Real Mobile SMS OTP
+function requestRealSmsOtp() {
+    const phoneRaw = document.getElementById('phoneInput').value.trim();
+    const alertBox = document.getElementById('authAlertBox');
+    const alertText = document.getElementById('authAlertText');
+    const sendBtn = document.getElementById('sendOtpBtn');
+
+    // Basic validation for 10 digits
+    const digitsOnly = phoneRaw.replace(/\D/g, '');
+    if (digitsOnly.length !== 10 || !/^[6-9]/.test(digitsOnly)) {
+        alertBox.classList.remove('d-none');
+        alertBox.className = 'neu-alert neu-alert-danger';
+        alertText.innerText = 'Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.';
+        return;
+    }
+
+    sendBtn.disabled = true;
+    sendBtn.innerText = 'Sending...';
+
+    fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: digitsOnly })
+    })
+    .then(r => r.json().then(data => ({ status: r.status, body: data })))
+    .then(({ status, body }) => {
+        sendBtn.disabled = false;
+        sendBtn.innerText = 'Send OTP';
+
+        if (status === 200 && body.success) {
+            alertBox.classList.remove('d-none');
+            alertBox.className = 'neu-alert neu-alert-success';
+            // Security: Zero OTP is printed or shown in response. Only status message is displayed.
+            alertText.innerHTML = `<strong>SMS Sent!</strong> ${body.message} Please check your mobile phone and enter the code below.`;
+
+            document.getElementById('otpInputGroup').classList.remove('d-none');
+            startCooldownTimer(60);
+            startExpiryTimer(300); // 5 minutes
+            
+            // Clear previous OTP boxes and focus first cell
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById('otp' + i).value = '';
+            }
+            document.getElementById('otp1').focus();
+        } else {
+            alertBox.classList.remove('d-none');
+            alertBox.className = 'neu-alert neu-alert-danger';
+            alertText.innerText = body.message || 'Failed to dispatch SMS OTP. Please try again.';
+        }
+    })
+    .catch(err => {
+        sendBtn.disabled = false;
+        sendBtn.innerText = 'Send OTP';
+        alertBox.classList.remove('d-none');
+        alertBox.className = 'neu-alert neu-alert-danger';
+        alertText.innerText = 'Network connection error while requesting OTP.';
+    });
+}
+
+// Auto-advance cursor through OTP cells
+function handleOtpInput(current, nextId) {
+    current.value = current.value.replace(/\D/g, '');
+    if (current.value.length >= 1 && nextId) {
+        document.getElementById(nextId).focus();
+    }
+}
+
+function handleOtpBackspace(event, current, prevId) {
+    if (event.key === 'Backspace' && !current.value && prevId) {
+        document.getElementById(prevId).focus();
+    }
+}
+
+// 60-second Resend Cooldown
+function startCooldownTimer(seconds) {
+    const cooldownText = document.getElementById('otpCooldownText');
+    const resendLink = document.getElementById('resendOtpLink');
+    resendLink.classList.add('d-none');
+    cooldownText.classList.remove('d-none');
+
+    if (resendCooldownInterval) clearInterval(resendCooldownInterval);
+
+    resendCooldownInterval = setInterval(() => {
+        seconds--;
+        cooldownText.innerText = `Resend in ${seconds}s`;
+        if (seconds <= 0) {
+            clearInterval(resendCooldownInterval);
+            cooldownText.classList.add('d-none');
+            resendLink.classList.remove('d-none');
+        }
+    }, 1000);
+}
+
+// 5-minute Expiry Countdown
+function startExpiryTimer(seconds) {
+    const timerElem = document.getElementById('otpExpiryTimer');
+    if (otpExpiryInterval) clearInterval(otpExpiryInterval);
+
+    otpExpiryInterval = setInterval(() => {
+        seconds--;
+        const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const secs = (seconds % 60).toString().padStart(2, '0');
+        timerElem.innerText = `Expires: ${mins}:${secs}`;
+
+        if (seconds <= 0) {
+            clearInterval(otpExpiryInterval);
+            timerElem.innerText = 'Expired';
+            const alertBox = document.getElementById('authAlertBox');
+            const alertText = document.getElementById('authAlertText');
+            alertBox.classList.remove('d-none');
+            alertBox.className = 'neu-alert neu-alert-danger';
+            alertText.innerText = 'Your OTP has expired (5 minute limit). Please request a new OTP.';
+        }
+    }, 1000);
+}
+
+// Verify entered SMS OTP
+function submitRealOtpVerification() {
+    const phoneRaw = document.getElementById('phoneInput').value.trim();
+    const digitsOnly = phoneRaw.replace(/\D/g, '');
+    const otp = [1,2,3,4,5,6].map(i => document.getElementById('otp' + i).value.trim()).join('');
+    const alertBox = document.getElementById('authAlertBox');
+    const alertText = document.getElementById('authAlertText');
+    const verifyBtn = document.getElementById('verifyOtpBtn');
+
+    if (otp.length !== 6) {
+        alertBox.classList.remove('d-none');
+        alertBox.className = 'neu-alert neu-alert-danger';
+        alertText.innerText = 'Please enter all 6 digits of the code received on your mobile phone.';
+        return;
+    }
+
+    verifyBtn.disabled = true;
+    verifyBtn.innerText = 'Verifying...';
+
+    fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: digitsOnly, otp: otp })
+    })
+    .then(r => r.json().then(data => ({ status: r.status, body: data })))
+    .then(({ status, body }) => {
+        verifyBtn.disabled = false;
+        verifyBtn.innerText = 'VERIFY & LOGIN';
+
+        if (status === 200 && body.success) {
+            alertBox.classList.remove('d-none');
+            alertBox.className = 'neu-alert neu-alert-success';
+            alertText.innerText = body.message || 'OTP verified successfully!';
+            
+            if (otpExpiryInterval) clearInterval(otpExpiryInterval);
+            if (resendCooldownInterval) clearInterval(resendCooldownInterval);
+
+            setTimeout(() => {
+                window.location.href = body.redirect || '/dashboard';
+            }, 600);
+        } else {
+            alertBox.classList.remove('d-none');
+            alertBox.className = 'neu-alert neu-alert-danger';
+            alertText.innerText = body.message || 'Incorrect OTP. Please try again.';
+        }
+    })
+    .catch(err => {
+        verifyBtn.disabled = false;
+        verifyBtn.innerText = 'VERIFY & LOGIN';
+        alertBox.classList.remove('d-none');
+        alertBox.className = 'neu-alert neu-alert-danger';
+        alertText.innerText = 'Network error while verifying OTP. Please try again.';
+    });
+}
+
+// Forgot Password Flow
+function openForgotPasswordModal() {
+    const modal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
+    document.getElementById('forgotStep1').classList.remove('d-none');
+    document.getElementById('forgotStep2').classList.add('d-none');
+    document.getElementById('forgotAlert').classList.add('d-none');
+    modal.show();
+}
+
+function requestResetCode() {
+    const identifier = document.getElementById('forgotIdentifier').value.trim();
+    const alertBox = document.getElementById('forgotAlert');
+    const alertText = document.getElementById('forgotAlertText');
+
+    if (!identifier) {
+        alertBox.classList.remove('d-none');
+        alertBox.className = 'neu-alert neu-alert-danger';
+        alertText.innerText = 'Please enter your registered email or phone.';
+        return;
+    }
+
+    fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: identifier, step: 'request_otp' })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alertBox.classList.remove('d-none');
+            alertBox.className = 'neu-alert neu-alert-success';
+            alertText.innerHTML = `<strong>Reset Code Sent:</strong> Verification code has been dispatched.`;
+            document.getElementById('forgotStep1').classList.add('d-none');
+            document.getElementById('forgotStep2').classList.remove('d-none');
+            document.getElementById('forgotOtp').value = data.otp || '';
+        } else {
+            alertBox.classList.remove('d-none');
+            alertBox.className = 'neu-alert neu-alert-danger';
+            alertText.innerText = data.message;
+        }
+    });
+}
+
+function submitPasswordReset() {
+    const identifier = document.getElementById('forgotIdentifier').value.trim();
+    const otp = document.getElementById('forgotOtp').value.trim();
+    const newPassword = document.getElementById('forgotNewPassword').value.trim();
+    const alertBox = document.getElementById('forgotAlert');
+    const alertText = document.getElementById('forgotAlertText');
+
+    if (!newPassword || newPassword.length < 4) {
+        alertBox.classList.remove('d-none');
+        alertBox.className = 'neu-alert neu-alert-danger';
+        alertText.innerText = 'Password must be at least 4 characters long.';
+        return;
+    }
+
+    fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: identifier, otp: otp, new_password: newPassword, step: 'reset' })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alertBox.classList.remove('d-none');
+            alertBox.className = 'neu-alert neu-alert-success';
+            alertText.innerText = data.message;
+            setTimeout(() => {
+                location.reload();
+            }, 1200);
+        } else {
+            alertBox.classList.remove('d-none');
+            alertBox.className = 'neu-alert neu-alert-danger';
+            alertText.innerText = data.message;
+        }
+    });
+}
+</script>
 {% endblock %}

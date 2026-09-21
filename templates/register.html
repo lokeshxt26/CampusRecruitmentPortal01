@@ -1,179 +1,220 @@
 {% extends "base.html" %}
 
-{% block title %}Register | CampusHire Portal{% endblock %}
+{% block title %}Create Account | CampusHire Registration{% endblock %}
 
 {% block content %}
-<div class="auth-page-wrapper py-5">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-7">
-                
-                <div class="glass-card p-4 p-md-5">
-                    
-                    <!-- Header with Avatar Upload -->
-                    <div class="text-center mb-4">
-                        <div class="avatar-container mb-3 position-relative d-inline-block" title="Click to upload profile photo">
-                            <img id="avatarPreviewImg" 
-                                 src="https://api.dicebear.com/7.x/bottts/svg?seed=newuser" 
-                                 alt="Avatar Preview" 
-                                 class="avatar-img">
-                            <label for="avatarFileInput" class="avatar-badge" title="Upload Profile Picture">
-                                <i class="bi bi-camera-fill"></i>
-                            </label>
-                        </div>
-                        <h3 class="fw-bold mb-1" style="color: #0f172a;">Create Your Account</h3>
-                        <p class="text-muted small">Join campus placement drives or recruit top graduates</p>
+<div class="neu-auth-body">
+    <div class="container d-flex justify-content-center">
+        <div class="neu-card" style="max-width: 480px;">
+            
+            <!-- Top Convex Embossed Badge with Golden Sparkles (Matching Reference Image) -->
+            <div class="neu-icon-badge" title="Join Campus Recruitment">
+                <span>✨</span>
+            </div>
 
-                        <!-- Quick Avatar Presets -->
-                        <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
-                            <span class="small text-muted me-1">Avatar:</span>
-                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" class="preset-avatar-option" data-avatar-url="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80">
-                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80" class="preset-avatar-option" data-avatar-url="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80">
-                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" class="preset-avatar-option" data-avatar-url="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80">
-                            <img src="https://api.dicebear.com/7.x/bottts/svg?seed=admin" class="preset-avatar-option" data-avatar-url="https://api.dicebear.com/7.x/bottts/svg?seed=admin">
-                        </div>
-                        <label for="avatarFileInput" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
-                            <i class="bi bi-upload me-1"></i> Upload Custom Photo
-                        </label>
-                    </div>
+            <!-- Header Titles -->
+            <h2 class="neu-title">Create Account</h2>
+            <p class="neu-subtitle">Start your journey with us</p>
 
-                    <!-- Registration Form -->
-                    <form method="POST" action="/register" enctype="multipart/form-data">
-                        
-                        <input type="file" id="avatarFileInput" name="profile_picture" accept="image/*" style="display:none;">
-                        <input type="hidden" id="profilePicInput" name="preset_avatar" value="">
+            <!-- Role Selector Tabs -->
+            <div class="neu-nav-tabs mb-3">
+                <button type="button" class="neu-nav-tab active" id="tabStudentBtn" onclick="selectRegisterRole('student')">
+                    <i class="bi bi-mortarboard me-1"></i> Student
+                </button>
+                <button type="button" class="neu-nav-tab" id="tabCompanyBtn" onclick="selectRegisterRole('company')">
+                    <i class="bi bi-building me-1"></i> Company / Recruiter
+                </button>
+            </div>
 
-                        <!-- Account Role Selector -->
-                        <div class="mb-4">
-                            <label class="form-label small fw-bold text-secondary">I am registering as:</label>
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <input type="radio" class="btn-check" name="role" id="roleStudent" value="student" checked onchange="toggleRoleFields()">
-                                    <label class="btn btn-outline-primary w-100 py-2 rounded-3 text-center fw-semibold" for="roleStudent">
-                                        <i class="bi bi-mortarboard me-1"></i> Student
-                                    </label>
-                                </div>
-                                <div class="col-6">
-                                    <input type="radio" class="btn-check" name="role" id="roleCompany" value="company" onchange="toggleRoleFields()">
-                                    <label class="btn btn-outline-info w-100 py-2 rounded-3 text-center fw-semibold" for="roleCompany">
-                                        <i class="bi bi-building me-1"></i> Company / Recruiter
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
+            <!-- Registration Form -->
+            <form id="registerForm" method="POST" action="/register" enctype="multipart/form-data" onsubmit="return validateRegisterForm()">
+                <input type="hidden" name="role" id="roleInput" value="student">
 
-                        <!-- Basic Credentials -->
-                        <div class="row g-3 mb-3">
-                            <div class="col-12">
-                                <label class="form-label small fw-semibold text-secondary">Full Name / Contact Person</label>
-                                <input type="text" name="name" class="form-control form-control-custom" placeholder="e.g. Rahul Sharma" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold text-secondary">Email Address</label>
-                                <input type="email" name="email" class="form-control form-control-custom" placeholder="name@campus.com" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold text-secondary">Password</label>
-                                <div class="input-group">
-                                    <input type="password" id="regPassword" name="password" class="form-control form-control-custom border-end-0" placeholder="••••••••" required>
-                                    <button class="btn btn-outline-secondary toggle-password-btn bg-white border-start-0" type="button" data-target="regPassword" style="border-radius: 0 var(--radius-md) var(--radius-md) 0;">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- STUDENT SPECIFIC FIELDS -->
-                        <div id="studentFieldsBlock" class="p-3 bg-light rounded-4 mb-4 border">
-                            <h6 class="fw-bold text-primary mb-3"><i class="bi bi-person-badge me-1"></i> Academic & Contact Profile</h6>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold text-secondary">Roll Number / Student ID</label>
-                                    <input type="text" name="roll_no" class="form-control form-control-custom" placeholder="e.g. 2022CSE101">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold text-secondary">Branch / Specialization</label>
-                                    <input type="text" name="branch" class="form-control form-control-custom" placeholder="e.g. Computer Science">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-semibold text-secondary">Graduation Year</label>
-                                    <input type="text" name="year" class="form-control form-control-custom" placeholder="e.g. 2026">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-semibold text-secondary">CGPA (out of 10)</label>
-                                    <input type="number" step="0.01" min="0" max="10" name="cgpa" class="form-control form-control-custom" placeholder="e.g. 8.5">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-semibold text-secondary">Phone Number</label>
-                                    <input type="tel" name="phone" class="form-control form-control-custom" placeholder="e.g. +91 9876543210">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label small fw-semibold text-secondary">Skills & Technologies (comma separated)</label>
-                                    <input type="text" name="skills" class="form-control form-control-custom" placeholder="e.g. Python, Java, React, SQL, Machine Learning">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label small fw-semibold text-secondary"><i class="bi bi-file-earmark-pdf me-1"></i> Upload Resume (PDF / DOC)</label>
-                                    <input type="file" name="resume_file" accept=".pdf,.doc,.docx" class="form-control form-control-custom">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- COMPANY SPECIFIC FIELDS -->
-                        <div id="companyFieldsBlock" class="p-3 bg-light rounded-4 mb-4 border" style="display: none;">
-                            <h6 class="fw-bold text-info mb-3"><i class="bi bi-buildings me-1"></i> Corporate Details</h6>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold text-secondary">Company Name</label>
-                                    <input type="text" name="company_name" class="form-control form-control-custom" placeholder="e.g. Acme Corp">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold text-secondary">Official Website</label>
-                                    <input type="url" name="website" class="form-control form-control-custom" placeholder="https://example.com">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold text-secondary">Headquarters / Office Location</label>
-                                    <input type="text" name="location" class="form-control form-control-custom" placeholder="e.g. Bangalore, Hyderabad">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold text-secondary">Company Logo URL (Optional)</label>
-                                    <input type="text" name="company_logo" class="form-control form-control-custom" placeholder="https://... logo image">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label small fw-semibold text-secondary">About Company</label>
-                                    <textarea name="description" rows="2" class="form-control form-control-custom" placeholder="Brief overview of company and mission..."></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Submit Button -->
-                        <button type="submit" class="btn btn-gradient-primary w-100 py-2 mb-3">
-                            <i class="bi bi-check-circle me-1"></i> Complete Registration
-                        </button>
-
-                    </form>
-
-                    <!-- Footer Link -->
-                    <div class="text-center pt-2 border-top">
-                        <p class="small text-muted mb-0">
-                            Already registered? 
-                            <a href="/login" class="text-primary fw-bold text-decoration-none">
-                                Sign In Here
-                            </a>
-                        </p>
-                    </div>
-
+                <!-- Full Name Input -->
+                <div class="neu-input-wrapper">
+                    <label class="neu-input-label">Full Name</label>
+                    <input type="text" 
+                           id="regName" 
+                           name="name" 
+                           class="neu-input" 
+                           placeholder="e.g. Rahul Sharma" 
+                           required>
                 </div>
 
+                <!-- Email Address Input -->
+                <div class="neu-input-wrapper">
+                    <label class="neu-input-label">Email Address</label>
+                    <input type="email" 
+                           id="regEmail" 
+                           name="email" 
+                           class="neu-input" 
+                           placeholder="name@campus.com" 
+                           required>
+                </div>
+
+                <!-- Mobile Phone Number Input -->
+                <div class="neu-input-wrapper">
+                    <label class="neu-input-label">Indian Mobile Number (+91)</label>
+                    <input type="tel" 
+                           id="regPhone" 
+                           name="phone" 
+                           class="neu-input" 
+                           placeholder="10-digit mobile number (e.g. 9876543210)" 
+                           maxlength="10" 
+                           pattern="[6-9][0-9]{9}"
+                           title="Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9"
+                           required>
+                </div>
+
+                <!-- Password Input with Eye Toggle -->
+                <div class="neu-input-wrapper">
+                    <label class="neu-input-label">Password</label>
+                    <div class="neu-password-wrap">
+                        <input type="password" 
+                               id="regPassword" 
+                               name="password" 
+                               class="neu-input" 
+                               placeholder="••••••••" 
+                               required>
+                        <button type="button" class="neu-eye-btn" onclick="togglePasswordVisibility('regPassword', this)" title="Show/Hide Password">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Confirm Password Input -->
+                <div class="neu-input-wrapper">
+                    <label class="neu-input-label">Confirm Password</label>
+                    <div class="neu-password-wrap">
+                        <input type="password" 
+                               id="regConfirmPassword" 
+                               class="neu-input" 
+                               placeholder="••••••••" 
+                               required>
+                        <button type="button" class="neu-eye-btn" onclick="togglePasswordVisibility('regConfirmPassword', this)" title="Show/Hide Password">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    <div id="passwordMismatchError" class="text-danger small mt-1 d-none">
+                        Passwords do not match.
+                    </div>
+                </div>
+
+                <!-- Academic / Student Extra Details Toggle -->
+                <div id="studentDetailsBlock" class="mb-3">
+                    <div class="p-3 rounded-4 mb-3" style="background: rgba(255, 255, 255, 0.45); box-shadow: inset 2px 2px 5px var(--neu-shadow-dark), inset -2px -2px 5px var(--neu-shadow-light);">
+                        <span class="small fw-bold text-primary d-block mb-2"><i class="bi bi-person-lines-fill me-1"></i> Academic Profile (Optional)</span>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="text" name="branch" class="neu-input py-2" style="font-size:0.85rem;" placeholder="Branch (e.g. CSE)">
+                            </div>
+                            <div class="col-6">
+                                <input type="text" name="cgpa" class="neu-input py-2" style="font-size:0.85rem;" placeholder="CGPA (e.g. 8.5)">
+                            </div>
+                            <div class="col-12 mt-2">
+                                <label class="small text-muted mb-1 d-block"><i class="bi bi-file-earmark-pdf me-1"></i> Upload Resume</label>
+                                <input type="file" name="resume_file" accept=".pdf,.doc,.docx" class="form-control form-control-sm rounded-pill">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Company Extra Details -->
+                <div id="companyDetailsBlock" class="d-none mb-3">
+                    <div class="p-3 rounded-4 mb-3" style="background: rgba(255, 255, 255, 0.45); box-shadow: inset 2px 2px 5px var(--neu-shadow-dark), inset -2px -2px 5px var(--neu-shadow-light);">
+                        <span class="small fw-bold text-info d-block mb-2"><i class="bi bi-building-check me-1"></i> Organization Info</span>
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <input type="text" name="company_name" class="neu-input py-2" style="font-size:0.85rem;" placeholder="Company Name (e.g. Google India)">
+                            </div>
+                            <div class="col-6">
+                                <input type="text" name="location" class="neu-input py-2" style="font-size:0.85rem;" placeholder="Location / City">
+                            </div>
+                            <div class="col-6">
+                                <input type="text" name="website" class="neu-input py-2" style="font-size:0.85rem;" placeholder="Website URL">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Embossed CREATE ACCOUNT Button (Matching Reference Image) -->
+                <button type="submit" class="neu-btn-action" id="createAccountBtn">
+                    CREATE ACCOUNT
+                </button>
+            </form>
+
+            <!-- Already have an account? <- Navigation (Matching Reference Image) -->
+            <div class="neu-switch-row">
+                <span>Already have an account?</span>
+                <a href="/login" class="neu-circle-btn" title="Back to Login">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
             </div>
+
+            <!-- Social Buttons (G, f, in) -->
+            <div class="neu-social-row">
+                <a href="/auth/google/login" class="neu-social-btn text-danger" title="Continue with Google">
+                    <i class="bi bi-google"></i>
+                </a>
+                <button type="button" class="neu-social-btn text-primary" onclick="alert('Please use the official Google or Mobile OTP options.')" title="Sign up with Facebook">
+                    <i class="bi bi-facebook"></i>
+                </button>
+                <button type="button" class="neu-social-btn text-info" onclick="alert('Please use the official Google or Mobile OTP options.')" title="Sign up with LinkedIn">
+                    <i class="bi bi-linkedin"></i>
+            </div>
+
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_scripts %}
 <script>
-function toggleRoleFields() {
-    const isCompany = document.getElementById("roleCompany").checked;
-    document.getElementById("studentFieldsBlock").style.display = isCompany ? "none" : "block";
-    document.getElementById("companyFieldsBlock").style.display = isCompany ? "block" : "none";
+function selectRegisterRole(role) {
+    const tabStudent = document.getElementById('tabStudentBtn');
+    const tabCompany = document.getElementById('tabCompanyBtn');
+    const roleInput = document.getElementById('roleInput');
+    const studentBlock = document.getElementById('studentDetailsBlock');
+    const companyBlock = document.getElementById('companyDetailsBlock');
+
+    if (role === 'student') {
+        tabStudent.classList.add('active');
+        tabCompany.classList.remove('active');
+        roleInput.value = 'student';
+        studentBlock.classList.remove('d-none');
+        companyBlock.classList.add('d-none');
+    } else {
+        tabCompany.classList.add('active');
+        tabStudent.classList.remove('active');
+        roleInput.value = 'company';
+        studentBlock.classList.add('d-none');
+        companyBlock.classList.remove('d-none');
+    }
+}
+
+function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'bi bi-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'bi bi-eye';
+    }
+}
+
+function validateRegisterForm() {
+    const pass = document.getElementById('regPassword').value;
+    const confirm = document.getElementById('regConfirmPassword').value;
+    const err = document.getElementById('passwordMismatchError');
+
+    if (pass !== confirm) {
+        err.classList.remove('d-none');
+        return false;
+    }
+    err.classList.add('d-none');
+    return true;
 }
 </script>
 {% endblock %}

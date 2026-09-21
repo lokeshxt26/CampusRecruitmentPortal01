@@ -20,7 +20,7 @@
                 <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4 bg-white">
                     
                     <!-- Header Banner -->
-                    <div class="p-4 p-md-5" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%); color: white;">
+                    <div class="p-4 p-md-5" style="background: linear-gradient(135deg, #042f24 0%, #064e3b 50%, #065f46 100%); color: white;">
                         <div class="d-flex flex-column flex-md-row align-items-md-center gap-4">
                             <div class="company-badge" style="width: 72px; height: 72px; font-size: 1.75rem; border-radius: 16px;">
                                 {% if job.logo %}
@@ -30,7 +30,7 @@
                                 {% endif %}
                             </div>
                             <div class="flex-grow-1">
-                                <span class="badge bg-info text-dark rounded-pill px-3 py-1 mb-2">{{ job.job_type or 'Full Time' }}</span>
+                                <span class="badge bg-info text-white rounded-pill px-3 py-1 mb-2">{{ job.job_type or 'Full Time' }}</span>
                                 <h2 class="fw-bold mb-1 text-white">{{ job.title }}</h2>
                                 <h5 class="opacity-90 fw-normal text-light mb-0">
                                     {{ job.company_name }}
