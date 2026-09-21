@@ -1,4 +1,4 @@
-﻿# Byte-compiled / optimized / DLL files
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -27,3 +27,8 @@ cloudflared.log
 # Archives & temporary extraction
 extracted/
 *.zip
+
+# Local shortcuts and desktop files
+Desktop/
+*.lnk
+desktop.ini

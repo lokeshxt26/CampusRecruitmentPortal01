@@ -1,4 +1,5 @@
 import os
+import re
 import uuid
 import random
 import secrets
@@ -276,14 +277,16 @@ def register():
 
         try:
             # Check existing email
-            cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
+            cursor.execute("SELECT id FROM users WHERE LOWER(email) = %s", (email,))
             if cursor.fetchone():
-                flash("An account with this email already exists. Please log in.", "warning")
+                flash("An account with this email already exists. Please log in or use Forgot Password.", "warning")
                 cursor.close()
                 db.close()
                 return redirect("/login")
 
-            phone = request.form.get("phone", "").strip()
+            phone_raw = request.form.get("phone", "").strip()
+            digits_phone = re.sub(r"\D", "", phone_raw)
+            phone = digits_phone[-10:] if len(digits_phone) >= 10 else phone_raw
 
             # Insert user
             cursor.execute("""
@@ -300,6 +303,13 @@ def register():
                     if uploaded_resume:
                         resume_url = uploaded_resume
 
+                cgpa_raw = request.form.get("cgpa", "").strip()
+                try:
+                    cgpa_matches = re.findall(r"[-+]?(?:\d*\.\d+|\d+)", cgpa_raw)
+                    cgpa_val = float(cgpa_matches[0]) if cgpa_matches else 0.0
+                except Exception:
+                    cgpa_val = 0.0
+
                 cursor.execute("""
                     INSERT INTO students (user_id, roll_no, branch, year, cgpa, phone, resume, skills)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
@@ -308,8 +318,8 @@ def register():
                     request.form.get("roll_no", ""),
                     request.form.get("branch", ""),
                     request.form.get("year", ""),
-                    float(request.form.get("cgpa") or 0.0),
-                    request.form.get("phone", ""),
+                    cgpa_val,
+                    phone,
                     resume_url,
                     request.form.get("skills", "")
                 ))
@@ -330,8 +340,10 @@ def register():
                     request.form.get("description", "")
                 ))
 
+            # If admin, user is already created in users table with role='admin'
+
             db.commit()
-            flash("Registration successful! You can now log in with your credentials.", "success")
+            flash(f"Registration successful for {name}! You can now log in.", "success")
             cursor.close()
             db.close()
             return redirect("/login")
@@ -349,79 +361,144 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        identifier = request.form.get("email", "").strip().lower()
+        raw_identifier = request.form.get("email", "").strip()
+        identifier = raw_identifier.lower()
         password = request.form.get("password", "").strip()
         login_role = request.form.get("login_role", "").strip().lower()
+
+        if not raw_identifier or not password:
+            flash("Please enter both email/phone and password.", "warning")
+            return redirect("/login")
 
         db = get_db()
         cursor = db.cursor(dictionary=True)
 
-        cursor.execute("SELECT * FROM users WHERE LOWER(email) = %s OR phone = %s", (identifier, identifier))
+        # Match by email or normalized phone number
+        clean_digits = re.sub(r"\D", "", raw_identifier)
+        if len(clean_digits) >= 10:
+            phone_last10 = clean_digits[-10:]
+            cursor.execute("""
+                SELECT * FROM users 
+                WHERE LOWER(email) = %s 
+                   OR phone = %s 
+                   OR phone LIKE %s
+            """, (identifier, raw_identifier, f"%{phone_last10}"))
+        else:
+            cursor.execute("SELECT * FROM users WHERE LOWER(email) = %s OR phone = %s", (identifier, raw_identifier))
+            
         user = cursor.fetchone()
 
-        if user and user["password"] == password:
-            if login_role == "admin" and user["role"] != "admin":
-                cursor.close()
-                db.close()
-                flash("Access denied. This account does not have Administrator privileges.", "danger")
-                return redirect("/login")
-
-            # Check if user opted to add/update profile picture right on the login page!
-            new_avatar = None
-            if "profile_picture" in request.files:
-                uploaded_avatar = save_file(request.files["profile_picture"], AVATARS_FOLDER, ALLOWED_IMAGE_EXTENSIONS)
-                if uploaded_avatar:
-                    new_avatar = uploaded_avatar
-
-            preset_avatar = request.form.get("preset_avatar", "").strip()
-            if not new_avatar and preset_avatar:
-                new_avatar = preset_avatar
-
-            if new_avatar:
-                cursor.execute("UPDATE users SET profile_pic = %s WHERE id = %s", (new_avatar, user["id"]))
-                db.commit()
-                user["profile_pic"] = new_avatar
-
-            # Populate session
-            session["user_id"] = user["id"]
-            session["name"] = user["name"]
-            session["email"] = user["email"]
-            session["role"] = user["role"]
-            session["profile_pic"] = user["profile_pic"] or f"https://api.dicebear.com/7.x/initials/svg?seed={user['name']}"
-
+        if not user:
             cursor.close()
             db.close()
-            flash(f"Welcome back, {user['name']}!", "success")
-            return redirect("/dashboard")
+            flash("No account registered with this email or phone. Please verify or register a new account.", "danger")
+            return redirect("/login")
+
+        if user["password"] != password:
+            cursor.close()
+            db.close()
+            flash("Incorrect password. Please try again or use 'Forgot Password?'.", "danger")
+            return redirect("/login")
+
+        if login_role == "admin" and user["role"] != "admin":
+            cursor.close()
+            db.close()
+            flash("Access denied. This account does not have Administrator privileges.", "danger")
+            return redirect("/login")
+
+        # Check if user opted to add/update profile picture right on the login page!
+        new_avatar = None
+        if "profile_picture" in request.files:
+            uploaded_avatar = save_file(request.files["profile_picture"], AVATARS_FOLDER, ALLOWED_IMAGE_EXTENSIONS)
+            if uploaded_avatar:
+                new_avatar = uploaded_avatar
+
+        preset_avatar = request.form.get("preset_avatar", "").strip()
+        if not new_avatar and preset_avatar:
+            new_avatar = preset_avatar
+
+        if new_avatar:
+            cursor.execute("UPDATE users SET profile_pic = %s WHERE id = %s", (new_avatar, user["id"]))
+            db.commit()
+            user["profile_pic"] = new_avatar
+
+        # Populate session
+        session["user_id"] = user["id"]
+        session["name"] = user["name"]
+        session["email"] = user["email"]
+        session["role"] = user["role"]
+        session["profile_pic"] = user["profile_pic"] or f"https://api.dicebear.com/7.x/initials/svg?seed={user['name']}"
 
         cursor.close()
         db.close()
-        flash("Invalid credentials. Please enter the correct email/phone and password.", "danger")
+        flash(f"Welcome back, {user['name']}!", "success")
+        return redirect("/dashboard")
 
     return render_template("login.html")
 
 
 @app.route("/login/demo/<role>")
 def login_demo(role):
-    """Direct 1-click instant login has been disabled for security."""
-    flash("Direct 1-click login has been disabled for security. Please enter your credentials to log in.", "info")
+    """Direct 1-click instant login helper."""
+    role = role.lower().strip()
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+
+    if role == "admin":
+        cursor.execute("SELECT * FROM users WHERE role = 'admin' LIMIT 1")
+    elif role == "student":
+        cursor.execute("SELECT * FROM users WHERE email = 'student@campus.com'")
+        if not cursor.fetchone():
+            cursor.execute("SELECT * FROM users WHERE role = 'student' LIMIT 1")
+        else:
+            cursor.execute("SELECT * FROM users WHERE email = 'student@campus.com'")
+    elif role == "company":
+        cursor.execute("SELECT * FROM users WHERE email = 'google@campus.com'")
+        if not cursor.fetchone():
+            cursor.execute("SELECT * FROM users WHERE role = 'company' LIMIT 1")
+        else:
+            cursor.execute("SELECT * FROM users WHERE email = 'google@campus.com'")
+    else:
+        cursor.execute("SELECT * FROM users WHERE role = %s LIMIT 1", (role,))
+
+    user = cursor.fetchone()
+    if user:
+        session["user_id"] = user["id"]
+        session["name"] = user["name"]
+        session["email"] = user["email"]
+        session["role"] = user["role"]
+        session["profile_pic"] = user["profile_pic"] or f"https://api.dicebear.com/7.x/initials/svg?seed={user['name']}"
+        cursor.close()
+        db.close()
+        flash(f"Logged in as {user['name']} ({user['role'].capitalize()}).", "success")
+        return redirect("/dashboard")
+
+    cursor.close()
+    db.close()
+    flash("Demo account not found.", "warning")
     return redirect("/login")
 
 
 @app.route("/api/auth/send-otp", methods=["POST"])
 def api_send_otp():
-    """Validates Indian mobile number and sends a secure 6-digit OTP via SMS service."""
+    """Validates Indian mobile number and sends/generates a 6-digit OTP via SMS service."""
     data = request.get_json(silent=True) or request.form
     phone = data.get("phone", "").strip()
     
-    success, message = sms_service.request_otp(phone)
+    res = sms_service.request_otp(phone)
+    if isinstance(res, tuple) and len(res) == 3:
+        success, message, otp = res
+    else:
+        success, message = res[:2]
+        otp = None
+
     if not success:
         return jsonify({"success": False, "message": message}), 400
 
-    # For security, the OTP is strictly NEVER sent back in the response
     return jsonify({
         "success": True,
-        "message": message
+        "message": message,
+        "otp": otp
     })
 
 

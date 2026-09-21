@@ -121,6 +121,7 @@ def init_db(force_reseed=False):
             email {text_type} UNIQUE NOT NULL,
             password {text_type} NOT NULL,
             role {text_type} NOT NULL,
+            phone {text_type} DEFAULT '',
             profile_pic {text_type} DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -198,17 +199,40 @@ def init_db(force_reseed=False):
     db.close()
 
 
+def reset_database():
+    """Completely resets all tables, deleting custom test data and reseeding default seed data."""
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    tables = ["applications", "jobs", "students", "companies", "users"]
+    for t in tables:
+        try:
+            cursor.execute(f"DROP TABLE IF EXISTS {t}")
+        except Exception:
+            pass
+    db.commit()
+    cursor.close()
+    db.close()
+    init_db(force_reseed=True)
+
+
 def seed_sample_data(db):
     """Seed comprehensive list of 20+ companies, recruitment drives, students, and admin."""
     cursor = db.cursor(dictionary=True)
 
     # 1. Admin Account
     cursor.execute("SELECT id FROM users WHERE email = 'admin@campus.com'")
-    if not cursor.fetchone():
+    admin_user = cursor.fetchone()
+    if not admin_user:
         cursor.execute("""
             INSERT INTO users (name, email, password, role, profile_pic)
             VALUES (%s, %s, %s, %s, %s)
         """, ("System Administrator", "admin@campus.com", "admin123", "admin", "https://api.dicebear.com/7.x/bottts/svg?seed=admin"))
+    else:
+        cursor.execute("""
+            UPDATE users 
+            SET name = %s, password = %s, role = %s, profile_pic = %s
+            WHERE email = 'admin@campus.com'
+        """, ("System Administrator", "admin123", "admin", "https://api.dicebear.com/7.x/bottts/svg?seed=admin"))
 
     # 2. Comprehensive Global & Domestic Recruiting Partners
     sample_companies = [

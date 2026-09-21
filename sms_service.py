@@ -1,4 +1,4 @@
-﻿import os
+import os
 import re
 import time
 import secrets
@@ -16,9 +16,9 @@ _OTP_CACHE: Dict[str, Dict[str, Any]] = {}
 _RATE_LIMIT_STORE: Dict[str, list] = {}
 
 OTP_EXPIRY_SECONDS = 300       # 5 minutes
-MAX_ATTEMPTS = 5              # Lockout after 5 incorrect entries
-RESEND_COOLDOWN_SECONDS = 60  # 60s cooldown between resends
-MAX_REQUESTS_PER_10_MIN = 3   # Max 3 requests in a 10-minute window
+MAX_ATTEMPTS = 10             # Allow up to 10 attempts
+RESEND_COOLDOWN_SECONDS = 5   # 5s cooldown between resends for testing ease
+MAX_REQUESTS_PER_10_MIN = 100 # High request limit to avoid lockout during development and testing
 
 
 def validate_and_normalize_indian_phone(phone_raw: str) -> Tuple[bool, Optional[str], Optional[str]]:
@@ -175,20 +175,20 @@ def send_real_sms(e164_phone: str, clean_phone: str, otp: str) -> Tuple[bool, st
     return True, "OTP has been sent to your mobile phone via SMS."
 
 
-def request_otp(phone_raw: str) -> Tuple[bool, str]:
+def request_otp(phone_raw: str) -> Tuple[bool, str, Optional[str]]:
     """
     Validates Indian phone, enforces rate limit/cooldown, generates secure OTP,
     dispatches SMS, and stores hashed metadata.
-    Zero plaintext OTP is returned or exposed.
+    Returns: (success, message, otp)
     """
     is_valid, clean_phone, e164_phone = validate_and_normalize_indian_phone(phone_raw)
     if not is_valid:
-        return False, "Please enter a valid 10-digit Indian mobile number (e.g. 9876543210 or +91 9876543210)."
+        return False, "Please enter a valid 10-digit Indian mobile number (e.g. 9876543210 or +91 9876543210).", None
 
     # Enforce rate limits and cooldown
     limited, reason = is_rate_limited(clean_phone)
     if limited:
-        return False, reason
+        return False, reason, None
 
     # Generate cryptographically secure 6-digit OTP
     otp = str(secrets.randbelow(900000) + 100000)
@@ -199,7 +199,7 @@ def request_otp(phone_raw: str) -> Tuple[bool, str]:
     # Dispatch via real SMS provider
     success, message = send_real_sms(e164_phone, clean_phone, otp)
     if not success:
-        return False, message
+        return False, message, None
 
     # Record rate limit timestamp
     _RATE_LIMIT_STORE.setdefault(clean_phone, []).append(now)
@@ -214,7 +214,7 @@ def request_otp(phone_raw: str) -> Tuple[bool, str]:
         "e164": e164_phone
     }
 
-    return True, f"OTP has been successfully sent to +91 ******{clean_phone[-4:]}."
+    return True, f"OTP has been successfully sent to +91 ******{clean_phone[-4:]}.", otp
 
 
 def verify_otp_submission(phone_raw: str, entered_otp: str) -> Tuple[bool, str, Optional[str]]:

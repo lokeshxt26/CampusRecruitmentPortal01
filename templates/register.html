@@ -22,7 +22,10 @@
                     <i class="bi bi-mortarboard me-1"></i> Student
                 </button>
                 <button type="button" class="neu-nav-tab" id="tabCompanyBtn" onclick="selectRegisterRole('company')">
-                    <i class="bi bi-building me-1"></i> Company / Recruiter
+                    <i class="bi bi-building me-1"></i> Company
+                </button>
+                <button type="button" class="neu-nav-tab" id="tabAdminBtn" onclick="selectRegisterRole('admin')">
+                    <i class="bi bi-shield-lock me-1"></i> Admin
                 </button>
             </div>
 
@@ -54,15 +57,12 @@
 
                 <!-- Mobile Phone Number Input -->
                 <div class="neu-input-wrapper">
-                    <label class="neu-input-label">Indian Mobile Number (+91)</label>
+                    <label class="neu-input-label">Mobile Number</label>
                     <input type="tel" 
                            id="regPhone" 
                            name="phone" 
                            class="neu-input" 
-                           placeholder="10-digit mobile number (e.g. 9876543210)" 
-                           maxlength="10" 
-                           pattern="[6-9][0-9]{9}"
-                           title="Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9"
+                           placeholder="e.g. 9876543210 or +91 9876543210" 
                            required>
                 </div>
 
@@ -173,22 +173,28 @@
 function selectRegisterRole(role) {
     const tabStudent = document.getElementById('tabStudentBtn');
     const tabCompany = document.getElementById('tabCompanyBtn');
+    const tabAdmin = document.getElementById('tabAdminBtn');
     const roleInput = document.getElementById('roleInput');
     const studentBlock = document.getElementById('studentDetailsBlock');
     const companyBlock = document.getElementById('companyDetailsBlock');
 
+    [tabStudent, tabCompany, tabAdmin].forEach(t => { if (t) t.classList.remove('active'); });
+
     if (role === 'student') {
-        tabStudent.classList.add('active');
-        tabCompany.classList.remove('active');
+        if (tabStudent) tabStudent.classList.add('active');
         roleInput.value = 'student';
-        studentBlock.classList.remove('d-none');
-        companyBlock.classList.add('d-none');
-    } else {
-        tabCompany.classList.add('active');
-        tabStudent.classList.remove('active');
+        if (studentBlock) studentBlock.classList.remove('d-none');
+        if (companyBlock) companyBlock.classList.add('d-none');
+    } else if (role === 'company') {
+        if (tabCompany) tabCompany.classList.add('active');
         roleInput.value = 'company';
-        studentBlock.classList.add('d-none');
-        companyBlock.classList.remove('d-none');
+        if (studentBlock) studentBlock.classList.add('d-none');
+        if (companyBlock) companyBlock.classList.remove('d-none');
+    } else if (role === 'admin') {
+        if (tabAdmin) tabAdmin.classList.add('active');
+        roleInput.value = 'admin';
+        if (studentBlock) studentBlock.classList.add('d-none');
+        if (companyBlock) companyBlock.classList.add('d-none');
     }
 }
 

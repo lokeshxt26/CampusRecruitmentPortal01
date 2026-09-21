@@ -39,6 +39,34 @@
             <form id="emailLoginForm" method="POST" action="/login">
                 <input type="hidden" name="login_role" id="loginRoleInput" value="user">
 
+                <!-- Quick Test Credentials Helper for Email Tab -->
+                <div id="emailDemoBox" class="p-2 mb-3 rounded-3" style="background: rgba(13, 110, 253, 0.07); border: 1px dashed rgba(13, 110, 253, 0.35);">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <small class="fw-semibold text-primary"><i class="bi bi-key-fill me-1"></i>Quick Test Accounts:</small>
+                    </div>
+                    <div class="d-flex flex-wrap gap-1">
+                        <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 fw-semibold" style="font-size:0.76rem; border-radius:12px;" onclick="quickFill('student@campus.com', 'student123')">
+                            🎓 Student
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-info py-0 px-2 fw-semibold" style="font-size:0.76rem; border-radius:12px;" onclick="quickFill('google@campus.com', 'recruiter123')">
+                            🏢 Recruiter
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick Admin Credentials Helper for Admin Tab -->
+                <div id="adminDemoBox" class="p-2 mb-3 rounded-3 d-none" style="background: rgba(220, 53, 69, 0.08); border: 1px dashed rgba(220, 53, 69, 0.4);">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <small class="fw-bold text-danger d-block"><i class="bi bi-shield-lock-fill me-1"></i>Admin Credentials:</small>
+                            <span class="small font-monospace text-muted" style="font-size:0.78rem;">admin@campus.com / admin123</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-danger py-0 px-2 fw-semibold" style="font-size:0.76rem; border-radius:12px;" onclick="quickFill('admin@campus.com', 'admin123')">
+                            ⚡ Fill Admin
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Email / Identifier Input -->
                 <div class="neu-input-wrapper">
                     <label class="neu-input-label" id="loginIdentifierLabel">Email Address</label>
@@ -85,6 +113,27 @@
 
             <!-- 2. REAL MOBILE SMS OTP LOGIN FORM -->
             <div id="phoneLoginForm" class="d-none">
+                <!-- Mobile OTP Helper -->
+                <div class="p-2 mb-2 rounded-3" style="background: rgba(25, 135, 84, 0.08); border: 1px dashed rgba(25, 135, 84, 0.35);">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <small class="fw-semibold text-success"><i class="bi bi-phone me-1"></i>Mobile OTP Test:</small>
+                        <button type="button" class="btn btn-sm btn-outline-success py-0 px-2 fw-semibold" style="font-size:0.76rem; border-radius:12px;" onclick="document.getElementById('phoneInput').value='9876543210'; requestRealSmsOtp();">
+                            ⚡ Quick Test 9876543210
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Prominent On-Screen OTP Display Banner -->
+                <div id="otpDisplayBanner" class="alert alert-success d-none text-center p-3 mb-3" style="border-radius:16px; background:#d1e7dd; border:2px solid #2ecc71;">
+                    <div class="small fw-bold text-success mb-1">
+                        <i class="bi bi-shield-check me-1 fs-5"></i> YOUR LOGIN OTP:
+                    </div>
+                    <span class="badge bg-success fs-3 px-3 py-1 font-monospace" style="letter-spacing: 5px;" id="otpBannerValue">------</span>
+                    <div class="text-success fw-semibold mt-1" style="font-size:0.78rem;">
+                        <i class="bi bi-check-circle-fill"></i> Auto-filled into boxes below!
+                    </div>
+                </div>
+
                 <!-- Mobile Number Input Group -->
                 <div class="neu-input-wrapper" id="phoneInputGroup">
                     <label class="neu-input-label">Indian Mobile Number</label>
@@ -227,6 +276,13 @@
 let resendCooldownInterval = null;
 let otpExpiryInterval = null;
 
+function quickFill(email, password) {
+    const idInput = document.getElementById('loginIdentifier');
+    const passInput = document.getElementById('loginPassword');
+    if (idInput) idInput.value = email;
+    if (passInput) passInput.value = password;
+}
+
 function switchLoginMode(mode) {
     const emailForm = document.getElementById('emailLoginForm');
     const phoneForm = document.getElementById('phoneLoginForm');
@@ -236,8 +292,11 @@ function switchLoginMode(mode) {
     const roleInput = document.getElementById('loginRoleInput');
     const idLabel = document.getElementById('loginIdentifierLabel');
     const idInput = document.getElementById('loginIdentifier');
+    const passInput = document.getElementById('loginPassword');
     const alertBox = document.getElementById('authAlertBox');
     const alertText = document.getElementById('authAlertText');
+    const emailDemo = document.getElementById('emailDemoBox');
+    const adminDemo = document.getElementById('adminDemoBox');
 
     [tabEmail, tabPhone, tabAdmin].forEach(t => t.classList.remove('active'));
     alertBox.classList.add('d-none');
@@ -246,9 +305,13 @@ function switchLoginMode(mode) {
         tabEmail.classList.add('active');
         emailForm.classList.remove('d-none');
         phoneForm.classList.add('d-none');
+        if (emailDemo) emailDemo.classList.remove('d-none');
+        if (adminDemo) adminDemo.classList.add('d-none');
         roleInput.value = 'user';
         idLabel.innerText = 'Email Address';
         idInput.placeholder = 'name@campus.com';
+        idInput.value = '';
+        passInput.value = '';
     } else if (mode === 'phone') {
         tabPhone.classList.add('active');
         emailForm.classList.add('d-none');
@@ -257,13 +320,17 @@ function switchLoginMode(mode) {
         tabAdmin.classList.add('active');
         emailForm.classList.remove('d-none');
         phoneForm.classList.add('d-none');
+        if (emailDemo) emailDemo.classList.add('d-none');
+        if (adminDemo) adminDemo.classList.remove('d-none');
         roleInput.value = 'admin';
         idLabel.innerText = 'Administrator Email';
         idInput.placeholder = 'admin@campus.com';
+        idInput.value = 'admin@campus.com';
+        passInput.value = 'admin123';
         
         alertBox.classList.remove('d-none');
         alertBox.className = 'neu-alert neu-alert-info';
-        alertText.innerHTML = '<strong>Admin Portal:</strong> Please enter your administrator credentials.';
+        alertText.innerHTML = '<strong>Admin Portal:</strong> Credentials auto-filled! Click LOGIN to access the Admin Panel.';
     }
 }
 
@@ -311,18 +378,35 @@ function requestRealSmsOtp() {
         if (status === 200 && body.success) {
             alertBox.classList.remove('d-none');
             alertBox.className = 'neu-alert neu-alert-success';
-            // Security: Zero OTP is printed or shown in response. Only status message is displayed.
-            alertText.innerHTML = `<strong>SMS Sent!</strong> ${body.message} Please check your mobile phone and enter the code below.`;
 
-            document.getElementById('otpInputGroup').classList.remove('d-none');
-            startCooldownTimer(60);
-            startExpiryTimer(300); // 5 minutes
-            
-            // Clear previous OTP boxes and focus first cell
-            for (let i = 1; i <= 6; i++) {
-                document.getElementById('otp' + i).value = '';
+            if (body.otp) {
+                const otpStr = String(body.otp).trim();
+                alertText.innerHTML = `<strong>Mobile OTP Generated:</strong> <span class="badge bg-primary fs-5 px-3 py-1 font-monospace" style="letter-spacing:3px;">${otpStr}</span> &mdash; Auto-filled into the 6 boxes below!`;
+
+                const banner = document.getElementById('otpDisplayBanner');
+                const bannerVal = document.getElementById('otpBannerValue');
+                if (banner && bannerVal) {
+                    banner.classList.remove('d-none');
+                    bannerVal.innerText = otpStr;
+                }
+
+                document.getElementById('otpInputGroup').classList.remove('d-none');
+
+                // Auto-fill all 6 boxes
+                for (let i = 1; i <= 6; i++) {
+                    const cell = document.getElementById('otp' + i);
+                    if (cell && i <= otpStr.length) {
+                        cell.value = otpStr[i - 1];
+                    }
+                }
+            } else {
+                alertText.innerHTML = `<strong>SMS Sent!</strong> ${body.message}`;
+                document.getElementById('otpInputGroup').classList.remove('d-none');
             }
-            document.getElementById('otp1').focus();
+
+            startCooldownTimer(10);
+            startExpiryTimer(300); // 5 minutes
+            document.getElementById('verifyOtpBtn').focus();
         } else {
             alertBox.classList.remove('d-none');
             alertBox.className = 'neu-alert neu-alert-danger';
