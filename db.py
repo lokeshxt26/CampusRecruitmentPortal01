@@ -84,9 +84,11 @@ class SQLiteConnectionWrapper:
         self.conn.close()
 
 
+USE_MYSQL = os.environ.get("DB_ENGINE", "").lower() == "mysql" or os.environ.get("USE_MYSQL", "").lower() in ("true", "1")
+
 def get_db():
-    """Returns a database connection. Attempts MySQL first; falls back to SQLite seamlessly."""
-    if HAS_MYSQL:
+    """Returns a database connection. Uses SQLite by default; uses MySQL only if explicitly configured."""
+    if USE_MYSQL and HAS_MYSQL:
         try:
             conn = mysql.connector.connect(
                 host=os.environ.get("MYSQL_HOST", "localhost"),
@@ -99,7 +101,7 @@ def get_db():
         except Exception:
             pass  # Fall back to SQLite
 
-    # SQLite fallback
+    # SQLite primary reliable database
     conn = sqlite3.connect(DB_FILE, timeout=10)
     return SQLiteConnectionWrapper(conn)
 

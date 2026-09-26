@@ -69,12 +69,12 @@
 
                 <!-- Email / Identifier Input -->
                 <div class="neu-input-wrapper">
-                    <label class="neu-input-label" id="loginIdentifierLabel">Email Address</label>
+                    <label class="neu-input-label" id="loginIdentifierLabel">Email, Username, Roll No, or Mobile</label>
                     <input type="text" 
                            id="loginIdentifier" 
                            name="email" 
                            class="neu-input" 
-                           placeholder="name@campus.com" 
+                           placeholder="e.g. name@campus.com, lokesh26, or phone" 
                            required>
                 </div>
 
@@ -308,8 +308,8 @@ function switchLoginMode(mode) {
         if (emailDemo) emailDemo.classList.remove('d-none');
         if (adminDemo) adminDemo.classList.add('d-none');
         roleInput.value = 'user';
-        idLabel.innerText = 'Email Address';
-        idInput.placeholder = 'name@campus.com';
+        idLabel.innerText = 'Email, Username, Roll No, or Mobile';
+        idInput.placeholder = 'e.g. name@campus.com, lokesh26, or phone';
         idInput.value = '';
         passInput.value = '';
     } else if (mode === 'phone') {

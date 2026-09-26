@@ -16,10 +16,16 @@ from flask import (
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
 from db import get_db, init_db
+from datetime import timedelta
 import sms_service
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "campus_recruitment_portal_super_secret_key_2026")
+
+# Persistent Session Config (Keep user logged in for 30 days)
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=30)
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 # Apply ProxyFix middleware so redirect_uri uses https on Render / reverse proxies
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
@@ -343,10 +349,19 @@ def register():
             # If admin, user is already created in users table with role='admin'
 
             db.commit()
-            flash(f"Registration successful for {name}! You can now log in.", "success")
+
+            # Auto-login the user immediately upon registration with persistent session
+            session.permanent = True
+            session["user_id"] = user_id
+            session["name"] = name
+            session["email"] = email
+            session["role"] = role
+            session["profile_pic"] = profile_pic
+
+            flash(f"Welcome, {name}! Your account has been registered and you are now logged in.", "success")
             cursor.close()
             db.close()
-            return redirect("/login")
+            return redirect("/dashboard")
 
         except Exception as e:
             db.rollback()
@@ -373,25 +388,38 @@ def login():
         db = get_db()
         cursor = db.cursor(dictionary=True)
 
-        # Match by email or normalized phone number
+        # Look up user by Email, Username/Name, Roll Number, or Phone Number!
         clean_digits = re.sub(r"\D", "", raw_identifier)
-        if len(clean_digits) >= 10:
-            phone_last10 = clean_digits[-10:]
+        phone_last10 = clean_digits[-10:] if len(clean_digits) >= 10 else ""
+
+        if phone_last10:
             cursor.execute("""
-                SELECT * FROM users 
-                WHERE LOWER(email) = %s 
-                   OR phone = %s 
-                   OR phone LIKE %s
-            """, (identifier, raw_identifier, f"%{phone_last10}"))
+                SELECT u.* FROM users u
+                LEFT JOIN students s ON u.id = s.user_id
+                WHERE LOWER(u.email) = %s 
+                   OR LOWER(u.name) = %s 
+                   OR u.phone = %s 
+                   OR u.phone LIKE %s
+                   OR LOWER(s.roll_no) = %s
+                LIMIT 1
+            """, (identifier, identifier, raw_identifier, f"%{phone_last10}", identifier))
         else:
-            cursor.execute("SELECT * FROM users WHERE LOWER(email) = %s OR phone = %s", (identifier, raw_identifier))
+            cursor.execute("""
+                SELECT u.* FROM users u
+                LEFT JOIN students s ON u.id = s.user_id
+                WHERE LOWER(u.email) = %s 
+                   OR LOWER(u.name) = %s 
+                   OR u.phone = %s 
+                   OR LOWER(s.roll_no) = %s
+                LIMIT 1
+            """, (identifier, identifier, raw_identifier, identifier))
             
         user = cursor.fetchone()
 
         if not user:
             cursor.close()
             db.close()
-            flash("No account registered with this email or phone. Please verify or register a new account.", "danger")
+            flash("No account registered with this email, username, roll number, or phone. Please verify or register a new account.", "danger")
             return redirect("/login")
 
         if user["password"] != password:
@@ -422,7 +450,8 @@ def login():
             db.commit()
             user["profile_pic"] = new_avatar
 
-        # Populate session
+        # Populate session with 30-day persistent cookie
+        session.permanent = True
         session["user_id"] = user["id"]
         session["name"] = user["name"]
         session["email"] = user["email"]
@@ -542,7 +571,8 @@ def api_verify_otp():
             cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
             user = cursor.fetchone()
 
-    # Populate authenticated session
+    # Populate authenticated session with 30-day persistence
+    session.permanent = True
     session["user_id"] = user["id"]
     session["name"] = user["name"]
     session["email"] = user["email"]
@@ -691,7 +721,8 @@ def google_callback():
             db.commit()
             user["profile_pic"] = picture
 
-    # 7. Authenticate user session
+    # 7. Authenticate user session with 30-day persistence
+    session.permanent = True
     session["user_id"] = user["id"]
     session["name"] = user["name"]
     session["email"] = user["email"]
